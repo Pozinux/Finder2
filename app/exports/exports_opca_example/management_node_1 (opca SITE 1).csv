@@ -1,0 +1,3 @@
+Machine Virtuelle;Status;Nombre CPU;Ram (GO);Espace Disque (GO);REPO Principal;Compute Node;OS;TAG;TAG;TAG;TAG
+VM_OPCA_1;;;;;;compute_node_1;;;;;
+VM_OPCA_;;;;;;compute_node_2;;;;;

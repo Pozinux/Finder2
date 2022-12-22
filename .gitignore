@@ -1,0 +1,7 @@
+*.pyc
+__pycache__
+app/data/sqlite_db_file.db
+app/exports/exports_cmdb
+app/exports/exports_cmdb_all
+app/exports/exports_opca
+app/exports/exports_vmware

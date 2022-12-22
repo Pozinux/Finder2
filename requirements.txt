@@ -1,0 +1,11 @@
+PySide6
+mysql-connector-python
+numpy
+pandas
+protobuf
+python-dateutil
+pytz
+shiboken2
+six
+xlrd
+openpyxl

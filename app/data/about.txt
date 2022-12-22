@@ -1,0 +1,6 @@
+Finder 1.0.7
+
+- Application : Python 3.7
+- Base de donnees : SQlite
+- Auteur : Timothe Poznanski
+- Date : 2019

@@ -1,0 +1,4 @@
+"name","sys_class_name","u_device_type","u_platform_type","operational_status"
+"VM1","Server","","Production","Decommissioned"
+"SERV1","Server","","Production","Decommissioned"
+"toto","Server","","Production","Decommissioned"

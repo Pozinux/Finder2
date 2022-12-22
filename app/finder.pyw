@@ -632,7 +632,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         main_window.progressBar.reset()
         # main_window.progressBar.hide()
 
-        main_window.textEdit.setText("Sélectionnez des cellules puis CTRL+C pour les copier.\n\nFaites CTRL+A pour sélectionner toutes les données puis CTRL+C puis CTRL+V pour coller dans un notepad. Les données seront automatiquement formatées en CSV (avec des ';').\n\nVous pouvez également trier les colonnes directement dans l'interface.")
+        main_window.textEdit.setText("Sélectionnez des cellules puis CTRL+C pour les copier.\n\nFaites CTRL+A pour sélectionner toutes les données puis CTRL+C puis CTRL+V pour coller dans un notepad.\nLes données seront automatiquement formatées en CSV (avec des ';').\n\nVous pouvez également trier les colonnes directement dans l'interface.")
 
         # # Cacher des colonnes  # TPO
         # if main_window.checkBox_datacenter.isChecked() == False:

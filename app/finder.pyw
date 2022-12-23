@@ -87,10 +87,10 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         upload_one_export_action.setStatusTip("Importer un fichier RVTools (.xlsx ou .xls)")
         upload_one_export_action.triggered.connect(self.upload_one_export)
 
-        # Menu file > Export
-        export_action = QtGui.QAction(QtGui.QIcon('icons/save.png'), '&Exporter le resultat', self)
-        export_action.setStatusTip("Exporter le resultat de la recherche au format .csv")
-        export_action.triggered.connect(self.export_result)
+        # # Menu file > Export
+        # export_action = QtGui.QAction(QtGui.QIcon('icons/save.png'), '&Exporter le resultat', self)
+        # export_action.setStatusTip("Exporter le resultat de la recherche au format .csv")
+        # export_action.triggered.connect(self.export_result)
 
         # Menu fichier > Refesh BDD VMware
         refresh_bdd_vmware = QtGui.QAction(QtGui.QIcon('icons/refresh.png'), '&Mise à jour VMware', self)
@@ -153,7 +153,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         see_about_action.triggered.connect(self.see_about)
 
         self.menuFile.addAction(upload_one_export_action)  # Cette fonction n'est pas disponible pour le moment car bug depuis l'ajout des imports csv CMDB - A corriger plus tard
-        self.menuFile.addAction(export_action)
+        #self.menuFile.addAction(export_action)
         self.menuFile.addAction(refresh_bdd_vmware)
         self.menuFile.addAction(refresh_bdd_opca)
         self.menuFile.addAction(refresh_bdd_cmdb)
@@ -292,22 +292,22 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # Afficher la message box
         message_box_dates_exports.exec()
 
-    def export_result(self):
-        save_path = QtWidgets.QFileDialog.getExistingDirectory()
-        logging.debug(f"selected_folder: {save_path}")
+    # def export_result(self):
+    #     save_path = QtWidgets.QFileDialog.getExistingDirectory()
+    #     logging.debug(f"selected_folder: {save_path}")
 
-        # print(save_path)  # afficher le répertoire de sauvegarde
-        if save_path:
-            timestr = time.strftime("%Y%m%d-%H%M%S")
-            full_name = os.path.join(save_path, f"result_finder_{timestr}.csv")
-            full_name_with_good_slash = os.path.normpath(full_name)
-            file1 = open(full_name, "w")
-            textedit_content = tools_instance.list_result_saut
-            file1.write(textedit_content)
-            self.statusBar.showMessage(f"Resultat enregistré dans {full_name_with_good_slash}")
-            file1.close()
-        else:
-            self.textEdit.setText("Pas de répertoire sélectionné. Sauvegarde annulée.")
+    #     # print(save_path)  # afficher le répertoire de sauvegarde
+    #     if save_path:
+    #         timestr = time.strftime("%Y%m%d-%H%M%S")
+    #         full_name = os.path.join(save_path, f"result_finder_{timestr}.csv")
+    #         full_name_with_good_slash = os.path.normpath(full_name)
+    #         file1 = open(full_name, "w")
+    #         textedit_content = tools_instance.list_result_saut
+    #         file1.write(textedit_content)
+    #         self.statusBar.showMessage(f"Resultat enregistré dans {full_name_with_good_slash}")
+    #         file1.close()
+    #     else:
+    #         self.textEdit.setText("Pas de répertoire sélectionné. Sauvegarde annulée.")
 
     def setup_connections(self):
         # Setup of connections between widgets and other functions
@@ -392,18 +392,25 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                 files_paths_list.append(os.path.join(root, file))
 
         for file_path in files_paths_list:
+            logging.debug(file_path)
             file = os.path.basename(file_path)
+            logging.debug(file)
             file_is_authorized = tools_instance.is_file_authorized(file)
+            logging.debug(file_is_authorized)
             if file_is_authorized:
                 files_paths_authorized_list.append(file_path)
+                logging.debug(files_paths_authorized_list)
 
+        logging.debug(export_type)
         if export_type in ["opca", "vmware"]:
             # Create list of list from vmware and opca export files
             files_paths_authorized_list_len = len(files_paths_authorized_list)
             step = 0
+            logging.debug(files_paths_authorized_list_len)
             for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-
+                logging.debug("Boucle for")
                 file_authorized = os.path.basename(file_path_authorized)
+                logging.debug(format(file_authorized))
                 main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_authorized)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
                 file_name_authorized = os.path.splitext(file_authorized)[0]
@@ -514,6 +521,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                 elif export_type == "opca":
                     db_connection.sql_query_executemany(f"INSERT INTO serveur_opca (serveur_name, dns_name, management_name, host_name) VALUES (?,?,?,?)", data_list)
                 elif export_type == "vmware":
+                    logging.debug(data_list)
                     db_connection.sql_query_executemany(f"INSERT INTO serveur_vmware (serveur_name, dns_name, management_name, host_name, datacenter_name, cluster_name, annotation) VALUES (?,?,?,?,?,?,?)", data_list)
                 if db_connection.error_db_execution is None:
                     main_window.textEdit.setText(f"La base de données {export_type} contient {str(db_connection.cursor.rowcount)} lignes.")
@@ -590,16 +598,24 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.tools_instance.moveToThread(self.thread)
         self.tools_instance.searched_string_signal.connect(self.searched_string_signal)  # Quand le signal searched_string_signal est émit, on exécute la fonction searched_string_signal
         self.tools_instance.signal_results_query_search.connect(self.display_in_tableview)
-        self.thread.started.connect(self.tools_instance.search)
+        self.tools_instance.signal_display_warning_box.connect(self.display_warning_box)
         self.tools_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text)
         self.tools_instance.finished.connect(self.thread.quit)  # Quitte le thread quand il est terminé (reçoit un emit dans la classe Tools)
+        self.thread.started.connect(self.tools_instance.search)
         self.thread.start()
 
         # Création de la barre de progression en fenêtre
         self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list))
         self.prg_dialog.canceled.connect(self.abort)
-        self.prg_dialog.show()
+        if len(search_list) > 1:
+            self.prg_dialog.show()
 
+    def display_warning_box(self, warning_title, warning_text):
+        self.prg_dialog.hide()
+        logging.debug("Signal recherche vide reçu.")
+        msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, f"{warning_title}", f"{warning_text}")
+        msg_box.exec()
+        self.tools_instance.finished.connect(self.thread.quit)
 
     def display_in_tableview(self, results_query_search):
         # Display data results in tableview
@@ -678,4 +694,5 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 app = QtWidgets.QApplication([])
 main_window = Window()
 # tools_instance = Tools(main_window, search_list)
+tools_instance = Tools()
 app.exec()

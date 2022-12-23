@@ -341,16 +341,17 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def update_db(self, export_type):
         """ Updates the bdd according to the files in the export folder.
-           Warning, if there is no valid file, the database will be reset to 0 (because we first drop the database)
+           Warning, if there is no authorized file, the database will be reset to 0 (because we first drop the database)
            The principle is that the bdd is iso with the export folder
            """
         self.reset_progressbar_statusbar()
         data_list = []
         list_data_cmdb = []
         df_cmdb = None
+        files_paths_authorized_list = []
 
         logging.debug(f"Checking before updating that exports folder {export_type} is not empty.")
-        if self.check_if_exports_exist(export_type) == False:  # If exports folder is empty then we leave the function (we don't update because the update function starts by deleting all entries)
+        if self.check_if_exports_exist(export_type) == False:  # If exports folder is empty then we leave the function (we don't update because the update function starts by delete all entries)
             return            
 
         # Creates a list of files that are in the export folder where each element is of the type 'C:\\path\file.ext'
@@ -360,70 +361,84 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             for file in files:
                 files_paths_list.append(os.path.join(root, file))
 
+        for file_path in files_paths_list:
+            logging.debug(file_path)
+            file = os.path.basename(file_path)
+            logging.debug(file)
+            file_is_authorized = self.is_file_authorized(file)
+            logging.debug(file_is_authorized)
+            if file_is_authorized:
+                files_paths_authorized_list.append(file_path)
+                logging.debug(files_paths_authorized_list)
+
         logging.debug(export_type)
         if export_type in ["opca", "vmware"]:
             # Create list of list from vmware and opca export files
-            files_paths_list_len = len(files_paths_list)
+            files_paths_authorized_list_len = len(files_paths_authorized_list)
             step = 0
-            logging.debug(files_paths_list_len)
-            for file_number, file_path in enumerate(files_paths_list, 1):
-                file_to_import = os.path.basename(file_path)
-                logging.debug(format(file_to_import))
-                main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_to_import)}...")
+            logging.debug(files_paths_authorized_list_len)
+            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
+                logging.debug("Boucle for")
+                file_authorized = os.path.basename(file_path_authorized)
+                logging.debug(format(file_authorized))
+                main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_authorized)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-                file_name_to_import = os.path.splitext(file_to_import)[0]
+                file_name_authorized = os.path.splitext(file_authorized)[0]
 
                 # Update of the progress bar
                 main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_list_len
+                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
                 for between_pourcentage in range(step, pourcentage_number):
                     time.sleep(0.02)
                     main_window.statusBar.showMessage(f"Action en cours de {between_pourcentage}% ...")
                     main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_list_len
+                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
 
                 if export_type == "opca":
-                    df = pandas.read_csv(file_path, sep=';')
+                    df = pandas.read_csv(file_path_authorized, sep=';')
                     # Add a column to the dataframe
                     df['DNS Name'] = "N/A"
                     # Add a column to the dataframe
-                    df['management'] = file_name_to_import
+                    df['management'] = file_name_authorized
                     # The dataframe will contains only these colums
                     df = df[["Machine Virtuelle", "DNS Name", "management", "Compute Node"]]
 
                 else:
-                    df = pandas.read_excel(file_path)
+                    df = pandas.read_excel(file_path_authorized)
                     # Add a column to the dataframe
-                    df['management'] = file_name_to_import
+                    df['management'] = file_name_authorized
                     # The dataframe will contains only these colums
                     df = df[["VM", "DNS Name", "management", "Host", "Datacenter", "Cluster", "Annotation"]]
 
+                # df = df.where((pandas.notnull(df)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
                 list_data_temp = df.values.tolist()
                 data_list.extend(list_data_temp)
             logging.debug(data_list)  # Donne une liste de listes
         elif export_type == "cmdb":
             # Create list of list from cmdb export file
+            # print(files_paths_authorized_list)
             list_data_cmdb = []
-            files_paths_list_len = len(files_paths_list)
+            files_paths_authorized_list_len = len(files_paths_authorized_list)
             step = 0
-            for file_number, file_path in enumerate(files_paths_list, 1):
-                file_to_import = os.path.basename(file_path)
-                main_window.textEdit.setText(f"Data retrieval from the file {format(file_to_import)}...")
+            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
+                file_authorized = os.path.basename(file_path_authorized)
+                main_window.textEdit.setText(f"Data retrieval from the file {format(file_authorized)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
 
                 # Update of the progress bar
                 main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_list_len
+                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
                 for between_pourcentage in range(step, pourcentage_number):
                     time.sleep(0.02)
                     main_window.statusBar.showMessage(f"Processing of {between_pourcentage}% ...")
                     main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_list_len
+                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
 
-                    df_cmdb = pandas.read_csv(file_path, sep=',', encoding="Windows-1252")
+                    df_cmdb = pandas.read_csv(file_path_authorized, sep=',', encoding="Windows-1252")
                     # The dataframe will contains only these colums
                     df_cmdb = df_cmdb[["ci6_name", "ci2_name", "ci6_u_device_type", "ci6_operational_status", "ci6_sys_class_name", "ci6_asset_tag"]]
 
+                # df_cmdb = df_cmdb.where((pandas.notnull(df_cmdb)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
                 list_data_cmdb_temp = df_cmdb.values.tolist()
                 # print(list_data_cmdb_temp)
                 list_data_cmdb.extend(list_data_cmdb_temp)
@@ -431,25 +446,25 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         elif export_type == "cmdb_all":
             # Create list of list from cmdb export file
-            # print(files_paths_list)
+            # print(files_paths_authorized_list)
             list_data_cmdb_all = []
-            files_paths_list_len = len(files_paths_list)
+            files_paths_authorized_list_len = len(files_paths_authorized_list)
             step = 0
-            for file_number, file_path in enumerate(files_paths_list, 1):
-                file_to_import = os.path.basename(file_path)
-                main_window.textEdit.setText(f"Data retrieval from the file {format(file_to_import)}...")
+            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
+                file_authorized = os.path.basename(file_path_authorized)
+                main_window.textEdit.setText(f"Data retrieval from the file {format(file_authorized)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
 
                 # Update of the progress bar
                 main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_list_len
+                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
                 for between_pourcentage in range(step, pourcentage_number):
                     time.sleep(0.02)
                     main_window.statusBar.showMessage(f"Processing of {between_pourcentage}% ...")
                     main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_list_len
+                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
 
-                    df_cmdb_all = pandas.read_csv(file_path, sep=',', encoding="Windows-1252")
+                    df_cmdb_all = pandas.read_csv(file_path_authorized, sep=',', encoding="Windows-1252")
                     # The dataframe will contains only these colums
                     df_cmdb_all = df_cmdb_all[["name", "u_platform_type", "u_device_type", "operational_status", "sys_class_name"]]
 
@@ -489,8 +504,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                 logging.debug(db_connection.error_db_connection)
                 main_window.textEdit.setText("Erreur de connexion à la base de données.")
             main_window.reset_progressbar_statusbar()
-
-        self.reset_progressbar_statusbar()
         
 
     def setup_keyboard_shortcuts(self):

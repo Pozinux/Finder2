@@ -13,7 +13,6 @@ from pathlib import Path
 import constantes
 from DatabaseGestionSqlite import DatabaseGestionSqlite
 from ImportList import ImportList
-from Tools import Tools
 from Search import Search
 from graphique.MainWindow import Ui_MainWindow
 import MyTableModel
@@ -110,22 +109,22 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # Menu Parameters > List the RVTools export files present
         list_exports_action_vmware = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports RVTools', self)
         list_exports_action_vmware.setStatusTip("List the RVTools VMware export files (.xls/.xlsx) present")
-        list_exports_action_vmware.triggered.connect(lambda: tools_instance.list_exports("vmware"))
+        list_exports_action_vmware.triggered.connect(lambda: self.list_exports("vmware"))
 
         # Menu Parameters > List the OPCA export files present
         list_exports_action_opca = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports OPCA', self)
         list_exports_action_opca.setStatusTip("List the OPCA export files (.csv) present")
-        list_exports_action_opca.triggered.connect(lambda: tools_instance.list_exports("opca"))
+        list_exports_action_opca.triggered.connect(lambda: self.list_exports("opca"))
 
         # Menu Parameters > List the CMDB export files present
         list_exports_action_cmdb = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports CMDB', self)
         list_exports_action_cmdb.setStatusTip("List the CMDB export files (.csv) present")
-        list_exports_action_cmdb.triggered.connect(lambda: tools_instance.list_exports("cmdb"))
+        list_exports_action_cmdb.triggered.connect(lambda: self.list_exports("cmdb"))
 
         # Menu Parameters > List the CMDB ALL export files present
         list_exports_action_cmdb_all = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports CMDB ALL', self)
         list_exports_action_cmdb_all.setStatusTip("List the CMDB ALL export files (.csv) present")
-        list_exports_action_cmdb_all.triggered.connect(lambda: tools_instance.list_exports("cmdb_all"))
+        list_exports_action_cmdb_all.triggered.connect(lambda: self.list_exports("cmdb_all"))
 
         # Menu Parameters > List the export files authorized to be imported into the database
         list_files_authorized_action = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les fichiers autorisés', self)
@@ -279,23 +278,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         message_box_dates_exports.setWindowIcon(QIcon(QPixmap.pixmap))
         # Afficher la message box
         message_box_dates_exports.exec()
-
-    # def export_result(self):
-    #     save_path = QtWidgets.QFileDialog.getExistingDirectory()
-    #     logging.debug(f"selected_folder: {save_path}")
-
-    #     # print(save_path)  # afficher le répertoire de sauvegarde
-    #     if save_path:
-    #         timestr = time.strftime("%Y%m%d-%H%M%S")
-    #         full_name = os.path.join(save_path, f"result_finder_{timestr}.csv")
-    #         full_name_with_good_slash = os.path.normpath(full_name)
-    #         file1 = open(full_name, "w")
-    #         textedit_content = tools_instance.list_result_saut
-    #         file1.write(textedit_content)
-    #         self.statusBar.showMessage(f"Resultat enregistré dans {full_name_with_good_slash}")
-    #         file1.close()
-    #     else:
-    #         self.textEdit.setText("Pas de répertoire sélectionné. Sauvegarde annulée.")
 
     def setup_connections(self):
         # Setup of connections between widgets and other functions
@@ -535,11 +517,11 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
         self.search_instance.signal_display_warning_box.connect(self.display_warning_box)
         self.search_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text_if_signal)
-        self.search_instance.finished.connect(self.thread.quit)  # Quitte le thread quand il est terminé (reçoit un emit dans la classe Tools)
+        self.search_instance.finished.connect(self.thread.quit)
         self.thread.started.connect(self.search_instance.search)
         self.thread.start()
-
         # Création de la barre de progression en fenêtre        
+
         self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list))
         self.prg_dialog.close()
         self.prg_dialog.canceled.connect(self.abort)
@@ -608,14 +590,68 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         main_window.textEdit.setText(f"{text_to_set_in_edit_text}")
         
     def import_list(self):
-        self.window_import_list = ImportList(main_window, tools_instance)  # Je fourni à la classe ImportList l'instance main_window en paramètre
+        self.window_import_list = ImportList(main_window)  # Je fourni à la classe ImportList l'instance main_window en paramètre
         self.reset_progressbar_statusbar()
         self.window_import_list.show()
+
+    def list_exports(self, export_type):
+        # Check if there are any exports in the folder concerned
+        if not os.listdir(fr"{constantes.EXPORTS_DIR}\exports_{export_type}"):
+            main_window.textEdit.setText(f"Le répertoire des exports exports_{export_type} est vide.")
+        else:
+            # Creates a list of files that are in the export folder where each element is of the type 'C:\\path\file.ext'
+            files_paths_list = []
+            exports_files_folder_path = fr"{constantes.EXPORTS_DIR}\exports_{export_type}"  # Retrieving the path of the export folder
+            for root, dirs, files in os.walk(exports_files_folder_path):
+                for file in files:
+                    files_paths_list.append(os.path.join(root, file))
+            number_authorized = number_not_authorized = 0
+            files_authorized_list = []
+            files_not_authorized_list = []
+            for file_path in files_paths_list:
+                file = os.path.basename(file_path)
+                file_is_authorized = self.is_file_authorized(file)
+                if file_is_authorized:
+                    number_authorized += 1
+                    files_authorized_list.append(file)
+                else:
+                    number_not_authorized += 1
+                    files_not_authorized_list.append(file)
+                
+            #files_not_authorized_list.remove('.gitkeep')  # Ne pas afficher les fichiers .gitkeep comme des fichiers non-autorisés /!\ Créé une erreur si le fichier n'existe pas
+
+            if files_authorized_list:
+                list_result_cr_authorized = "\n".join(files_authorized_list)
+                result_search_authorized = f"Nombre de fichiers autorisés trouvés dans le répertoire des exports export_{export_type} : {str(number_authorized)}\n\n{list_result_cr_authorized}"
+            else:
+                result_search_authorized = "Pas de fichiers autorisés trouvés dans le répertoire des exports."
+
+            if files_not_authorized_list:
+                list_result_cr_not_authorized = "\n".join(files_not_authorized_list)
+                result_search_not_authorized = f"Nombre de fichiers non-autorisés trouvés dans le répertoire des exports export_{export_type} : {str(number_not_authorized)}\n\n{list_result_cr_not_authorized}"
+            else:
+                result_search_not_authorized = f"Pas de fichiers non-autorisés trouvés dans le répertoire des exports export_{export_type}."
+
+            main_window.textEdit.setText(f"{result_search_authorized}\n\n{result_search_not_authorized}")
+
+    def is_file_authorized(self, file):
+        """ If the file is in the list of authorized_files, we copy the file
+        :param file: Name of the file with its extension
+        :return: A booleen True if the file is part of the authorized list or False if not
+        """
+
+        if file in main_window.authorized_files_source_list:  # Lire l'attribut de l'instance qui a déjà été initialisé
+            logging.debug(f"is_file_authorized : \"{file}\" is an authorized file.")
+            file_authorized = True
+        else:
+            logging.debug(f"is_file_authorized : \"{file}\" is not an authorized file.")
+            file_authorized = False
+
+        return file_authorized
 
   
 # MAIN
 
 app = QtWidgets.QApplication([])
 main_window = Window()
-tools_instance = Tools()
 app.exec()

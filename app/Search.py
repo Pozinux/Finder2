@@ -8,7 +8,6 @@ import AlignDelegate
 import DatabaseGestionSqlite
 import MyTableModel
 import constantes
-from Tools import Tools
 
 
 class Search(QtCore.QObject):

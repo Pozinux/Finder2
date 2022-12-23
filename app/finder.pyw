@@ -107,23 +107,23 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         rename_export.triggered.connect(self.rename_exports)
 
         # Menu Parameters > List the RVTools export files present
-        list_exports_action_vmware = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports RVTools', self)
-        list_exports_action_vmware.setStatusTip("List the RVTools VMware export files (.xls/.xlsx) present")
+        list_exports_action_vmware = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports RVTools présents', self)
+        list_exports_action_vmware.setStatusTip("Lists the RVTools VMware export files (.xls/.xlsx) present in the folder")
         list_exports_action_vmware.triggered.connect(lambda: self.list_exports("vmware"))
 
         # Menu Parameters > List the OPCA export files present
-        list_exports_action_opca = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports OPCA', self)
-        list_exports_action_opca.setStatusTip("List the OPCA export files (.csv) present")
+        list_exports_action_opca = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports OPCA présents', self)
+        list_exports_action_opca.setStatusTip("Lists the OPCA export files (.csv) present in the folder")
         list_exports_action_opca.triggered.connect(lambda: self.list_exports("opca"))
 
         # Menu Parameters > List the CMDB export files present
-        list_exports_action_cmdb = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports CMDB', self)
-        list_exports_action_cmdb.setStatusTip("List the CMDB export files (.csv) present")
+        list_exports_action_cmdb = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports CMDB présents', self)
+        list_exports_action_cmdb.setStatusTip("Lists the CMDB export files (.csv) present in the folder")
         list_exports_action_cmdb.triggered.connect(lambda: self.list_exports("cmdb"))
 
         # Menu Parameters > List the CMDB ALL export files present
-        list_exports_action_cmdb_all = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports CMDB ALL', self)
-        list_exports_action_cmdb_all.setStatusTip("List the CMDB ALL export files (.csv) present")
+        list_exports_action_cmdb_all = QtGui.QAction(QtGui.QIcon('icons/list.png'), '&Lister les exports CMDB ALL présents', self)
+        list_exports_action_cmdb_all.setStatusTip("Lists the CMDB ALL export files (.csv) present in the folder")
         list_exports_action_cmdb_all.triggered.connect(lambda: self.list_exports("cmdb_all"))
 
         # Menu Parameters > List the export files authorized to be imported into the database
@@ -185,7 +185,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if self.files_renamed:
             files_renamed_cr = "\n".join(self.files_renamed)
-            self.textEdit.setText(f"Fichiers renommés :\n\n{files_renamed_cr}")
+            self.textEdit.setText(f"Fichiers qui ont été renommés par l'opération :\n\n{files_renamed_cr}")
         else:
             self.textEdit.setText("Pas de fichiers à renommer trouvés dans le répertoire des exports.")
 
@@ -352,7 +352,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         logging.debug(f"Checking before updating that exports folder {export_type} is not empty.")
         if self.check_if_exports_exist(export_type) == False:  # If exports folder is empty then we leave the function (we don't update because the update function starts by delete all entries)
-            return            
+            return False      
 
         # Creates a list of files that are in the export folder where each element is of the type 'C:\\path\file.ext'
         files_paths_list = []
@@ -366,10 +366,12 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             file = os.path.basename(file_path)
             logging.debug(file)
             file_is_authorized = self.is_file_authorized(file)
-            logging.debug(file_is_authorized)
             if file_is_authorized:
                 files_paths_authorized_list.append(file_path)
                 logging.debug(files_paths_authorized_list)
+            else:
+                main_window.textEdit.setText(f"Le fichier '{file}' n'est pas un fichier authorisé à être importé dans la base de données.\nImportation en cours annulée.\nVeuillez supprimer ou renommer ce fichier et recommencer.\nConsultez la liste des fichiers autorisés dans le menu 'Paramètres' puis 'Lister les fichiers autorisés'.")
+                return False
 
         logging.debug(export_type)
         if export_type in ["opca", "vmware"]:
@@ -378,7 +380,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             step = 0
             logging.debug(files_paths_authorized_list_len)
             for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                logging.debug("Boucle for")
                 file_authorized = os.path.basename(file_path_authorized)
                 logging.debug(format(file_authorized))
                 main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_authorized)}...")

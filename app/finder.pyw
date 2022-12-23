@@ -604,8 +604,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.thread.started.connect(self.tools_instance.search)
         self.thread.start()
 
-        # Création de la barre de progression en fenêtre
+        # Création de la barre de progression en fenêtre        
         self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list))
+        self.prg_dialog.close()
         self.prg_dialog.canceled.connect(self.abort)
         if len(search_list) > 1:
             self.prg_dialog.show()

@@ -54,7 +54,7 @@ class MyTableModel(QtCore.QAbstractTableModel):
             self.mylist.reverse()
         self.emit(QtCore.SIGNAL("layoutChanged()"))
 
-    # add event filter
+    # add event filter sur la détection des touches CTRL+C
     def eventFilter(self, source, event):
         if event.type() == QtCore.QEvent.KeyPress and event.matches(QtGui.QKeySequence.Copy):
             # print("CTRL+C detected")

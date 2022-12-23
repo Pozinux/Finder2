@@ -30,8 +30,6 @@ class Search(QtCore.QObject):
 
     def search(self):
 
-        tools_instance = Tools()
-
         print("is executed main thread?",  QtCore.QThread.currentThread() is QtCore.QCoreApplication.instance().thread())  # Pour vérifier si on est dans le main thread
 
         results_query_search = []
@@ -46,7 +44,7 @@ class Search(QtCore.QObject):
 
                 if self.categorie_to_search_in == 'Equipement':
 
-                    if tools_instance.is_db_empty():
+                    if self.is_db_empty():
                         pass
                     else:
                         logging.debug(f"La base de données n'est pas vide")
@@ -358,4 +356,39 @@ class Search(QtCore.QObject):
                 #TPO#self.window_instance.textEdit.setText("Erreur de connexion à la base de données.")
                 logging.debug(db_connection.error_db_connection)
 
-   
+
+    def is_db_empty(self):
+        with DatabaseGestionSqlite.DatabaseGestionSqlite() as db_connection:  # with allows you to use a context manager that will automatically call the disconnect function when you exit the scope
+            if db_connection.error_db_connection is None:
+                message = "Vérification en cours que la base de données n'est pas vide..."
+                logging.debug(message)
+                self.signal_textEdit_setText.emit(message)
+
+                db_connection.sql_query_execute(f'SELECT * FROM serveur_vmware')
+                if db_connection.error_db_execution is None:
+                    rows_vmware = db_connection.cursor.fetchall()
+                    if not rows_vmware:
+                        logging.debug("Base VMware vide ! Importer un export par Fichier > Importer un export...")
+                        self.signal_textEdit_setText.emit("Base VMware vide !\n\nImporter un export en cliquant sur 'Fichier' puis 'Importer un export...'")
+                        return True
+                    else:
+                        logging.debug("Base VMware non-vide.") 
+                else:
+                    #TPO#self.window_instance.textEdit.setText("Erreur lors de l'exécution des requêtes (Sélectionner les lignes VMware) sur la base de données.")
+                    logging.debug(db_connection.error_db_execution)
+                
+                db_connection.sql_query_execute(f'SELECT * FROM serveur_opca')
+                if db_connection.error_db_execution is None:
+                    rows_opca = db_connection.cursor.fetchall()
+                    if not rows_opca:
+                        logging.debug("Base OPCA vide ! Importer un export par Fichier > Importer un export...")
+                        self.signal_textEdit_setText.emit("Base OPCA vide !\n\nImporter un export en cliquant sur 'Fichier' puis 'Importer un export...'")
+                        return True
+                    else:
+                        logging.debug("Base OPCA non-vide.") 
+                else:
+                    #TPO#self.window_instance.textEdit.setText("Erreur lors de l'exécution des requêtes (Sélectionner les lignes OPCA) sur la base de données.")
+                    logging.debug(db_connection.error_db_execution)
+            else:
+                #TPO#self.window_instance.textEdit.setText("Erreur de connexion à la base de données.")
+                logging.debug(db_connection.error_db_connection)

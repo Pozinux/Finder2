@@ -82,17 +82,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         exit_action.setStatusTip("Exit the application")
         exit_action.triggered.connect(self.close)
 
-        # Cette fonction n'est pas disponible pour le moment car bug depuis l'ajout des imports csv CMDB - A corriger plus tard + décommenter l'apparition du bouton plus bas
-        # Menu file > Import
-        upload_one_export_action = QtGui.QAction(QtGui.QIcon('icons/import.png'), '&Importer un export', self)
-        upload_one_export_action.setStatusTip("Importer un fichier RVTools (.xlsx ou .xls)")
-        upload_one_export_action.triggered.connect(self.upload_one_export)
-
-        # # Menu file > Export
-        # export_action = QtGui.QAction(QtGui.QIcon('icons/save.png'), '&Exporter le resultat', self)
-        # export_action.setStatusTip("Exporter le resultat de la recherche au format .csv")
-        # export_action.triggered.connect(self.export_result)
-
         # Menu fichier > Refesh BDD VMware
         refresh_bdd_vmware = QtGui.QAction(QtGui.QIcon('icons/refresh.png'), '&Mise à jour VMware', self)
         refresh_bdd_vmware.setStatusTip("Update the database from the RVTools that are present in the exports folder")
@@ -153,8 +142,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         see_about_action.setStatusTip("About")
         see_about_action.triggered.connect(self.see_about)
 
-        self.menuFile.addAction(upload_one_export_action)  # Cette fonction n'est pas disponible pour le moment car bug depuis l'ajout des imports csv CMDB - A corriger plus tard
-        #self.menuFile.addAction(export_action)
         self.menuFile.addAction(refresh_bdd_vmware)
         self.menuFile.addAction(refresh_bdd_opca)
         self.menuFile.addAction(refresh_bdd_cmdb)
@@ -313,7 +300,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def setup_connections(self):
         # Setup of connections between widgets and other functions
         self.pushButton.clicked.connect(self.search)
-        #self.pushButton_2.clicked.connect(self.import_list)
+        self.pushButton_2.clicked.connect(self.import_list)
         # Make the button an image
         search_icon = QtGui.QPixmap("icons/search.png")
         list_icon = QtGui.QPixmap("icons/list.png")
@@ -372,17 +359,16 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def update_db(self, export_type):
         """ Updates the bdd according to the files in the export folder.
-           Warning, if there is no authorized file, the database will be reset to 0
+           Warning, if there is no valid file, the database will be reset to 0 (because we first drop the database)
            The principle is that the bdd is iso with the export folder
            """
         self.reset_progressbar_statusbar()
         data_list = []
         list_data_cmdb = []
         df_cmdb = None
-        files_paths_authorized_list = []
 
         logging.debug(f"Checking before updating that exports folder {export_type} is not empty.")
-        if self.check_if_exports_exist(export_type) == False:  # If exports folder is empty then we leave the function (we don't update because the update function starts by delete all entries)
+        if self.check_if_exports_exist(export_type) == False:  # If exports folder is empty then we leave the function (we don't update because the update function starts by deleting all entries)
             return            
 
         # Creates a list of files that are in the export folder where each element is of the type 'C:\\path\file.ext'
@@ -392,84 +378,70 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             for file in files:
                 files_paths_list.append(os.path.join(root, file))
 
-        for file_path in files_paths_list:
-            logging.debug(file_path)
-            file = os.path.basename(file_path)
-            logging.debug(file)
-            file_is_authorized = tools_instance.is_file_authorized(file)
-            logging.debug(file_is_authorized)
-            if file_is_authorized:
-                files_paths_authorized_list.append(file_path)
-                logging.debug(files_paths_authorized_list)
-
         logging.debug(export_type)
         if export_type in ["opca", "vmware"]:
             # Create list of list from vmware and opca export files
-            files_paths_authorized_list_len = len(files_paths_authorized_list)
+            files_paths_list_len = len(files_paths_list)
             step = 0
-            logging.debug(files_paths_authorized_list_len)
-            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                logging.debug("Boucle for")
-                file_authorized = os.path.basename(file_path_authorized)
-                logging.debug(format(file_authorized))
-                main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_authorized)}...")
+            logging.debug(files_paths_list_len)
+            for file_number, file_path in enumerate(files_paths_list, 1):
+                file_to_import = os.path.basename(file_path)
+                logging.debug(format(file_to_import))
+                main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_to_import)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-                file_name_authorized = os.path.splitext(file_authorized)[0]
+                file_name_to_import = os.path.splitext(file_to_import)[0]
 
                 # Update of the progress bar
                 main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
+                pourcentage_number = (file_number * 100 - 1) // files_paths_list_len
                 for between_pourcentage in range(step, pourcentage_number):
                     time.sleep(0.02)
                     main_window.statusBar.showMessage(f"Action en cours de {between_pourcentage}% ...")
                     main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
+                    step = (file_number * 100 - 1) // files_paths_list_len
 
                 if export_type == "opca":
-                    df = pandas.read_csv(file_path_authorized, sep=';')
+                    df = pandas.read_csv(file_path, sep=';')
                     # Add a column to the dataframe
                     df['DNS Name'] = "N/A"
                     # Add a column to the dataframe
-                    df['management'] = file_name_authorized
+                    df['management'] = file_name_to_import
                     # The dataframe will contains only these colums
                     df = df[["Machine Virtuelle", "DNS Name", "management", "Compute Node"]]
 
                 else:
-                    df = pandas.read_excel(file_path_authorized)
+                    df = pandas.read_excel(file_path)
                     # Add a column to the dataframe
-                    df['management'] = file_name_authorized
+                    df['management'] = file_name_to_import
                     # The dataframe will contains only these colums
                     df = df[["VM", "DNS Name", "management", "Host", "Datacenter", "Cluster", "Annotation"]]
 
-                # df = df.where((pandas.notnull(df)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
                 list_data_temp = df.values.tolist()
                 data_list.extend(list_data_temp)
             logging.debug(data_list)  # Donne une liste de listes
         elif export_type == "cmdb":
             # Create list of list from cmdb export file
-            # print(files_paths_authorized_list)
             list_data_cmdb = []
-            files_paths_authorized_list_len = len(files_paths_authorized_list)
+            files_paths_list_len = len(files_paths_list)
             step = 0
-            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                file_authorized = os.path.basename(file_path_authorized)
-                main_window.textEdit.setText(f"Data retrieval from the file {format(file_authorized)}...")
+            for file_number, file_path in enumerate(files_paths_list, 1):
+                file_to_import = os.path.basename(file_path)
+                main_window.textEdit.setText(f"Data retrieval from the file {format(file_to_import)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
 
                 # Update of the progress bar
                 main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
+                pourcentage_number = (file_number * 100 - 1) // files_paths_list_len
                 for between_pourcentage in range(step, pourcentage_number):
                     time.sleep(0.02)
                     main_window.statusBar.showMessage(f"Processing of {between_pourcentage}% ...")
                     main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
+                    step = (file_number * 100 - 1) // files_paths_list_len
 
-                    df_cmdb = pandas.read_csv(file_path_authorized, sep=',', encoding="Windows-1252")
+                    df_cmdb = pandas.read_csv(file_path, sep=',', encoding="Windows-1252")
                     # The dataframe will contains only these colums
                     df_cmdb = df_cmdb[["ci6_name", "ci2_name", "ci6_u_device_type", "ci6_operational_status", "ci6_sys_class_name", "ci6_asset_tag"]]
 
-                # df_cmdb = df_cmdb.where((pandas.notnull(df_cmdb)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
                 list_data_cmdb_temp = df_cmdb.values.tolist()
                 # print(list_data_cmdb_temp)
                 list_data_cmdb.extend(list_data_cmdb_temp)
@@ -477,25 +449,25 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         elif export_type == "cmdb_all":
             # Create list of list from cmdb export file
-            # print(files_paths_authorized_list)
+            # print(files_paths_list)
             list_data_cmdb_all = []
-            files_paths_authorized_list_len = len(files_paths_authorized_list)
+            files_paths_list_len = len(files_paths_list)
             step = 0
-            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                file_authorized = os.path.basename(file_path_authorized)
-                main_window.textEdit.setText(f"Data retrieval from the file {format(file_authorized)}...")
+            for file_number, file_path in enumerate(files_paths_list, 1):
+                file_to_import = os.path.basename(file_path)
+                main_window.textEdit.setText(f"Data retrieval from the file {format(file_to_import)}...")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
 
                 # Update of the progress bar
                 main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
+                pourcentage_number = (file_number * 100 - 1) // files_paths_list_len
                 for between_pourcentage in range(step, pourcentage_number):
                     time.sleep(0.02)
                     main_window.statusBar.showMessage(f"Processing of {between_pourcentage}% ...")
                     main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
+                    step = (file_number * 100 - 1) // files_paths_list_len
 
-                    df_cmdb_all = pandas.read_csv(file_path_authorized, sep=',', encoding="Windows-1252")
+                    df_cmdb_all = pandas.read_csv(file_path, sep=',', encoding="Windows-1252")
                     # The dataframe will contains only these colums
                     df_cmdb_all = df_cmdb_all[["name", "u_platform_type", "u_device_type", "operational_status", "sys_class_name"]]
 
@@ -536,43 +508,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                 main_window.textEdit.setText("Erreur de connexion à la base de données.")
             main_window.reset_progressbar_statusbar()
 
-    def upload_one_export(self):
         self.reset_progressbar_statusbar()
-        # File choice
-        file_chosen = QtWidgets.QFileDialog.getOpenFileName()
-        # Importing the file into the export folder
-        # file_chosen:  De type -> ('D:/Python/Projets/file.py', 'All Files (*)')
-        if not all(file_chosen):  # if you have pressed cancel, you have an empty variable
-            main_window.textEdit.setText("Pas de fichier sélectionné.")
-        else:
-            file = os.path.split(file_chosen[0])[1]  # We get the name of the file with its extension
-            logging.debug(f"file_chosen[0] : {file_chosen[0]}")
-            logging.debug(f"file : {file}")
-            file_is_authorized = tools_instance.is_file_authorized(file)
-            if file_is_authorized:
-                file_ext = os.path.splitext(file)[1]  # We retrieve the file extension to verify that the extension is authorized (dictionary)
-                logging.debug(f"file_ext : {file_ext}")
-                export_types_dict = {'.xlsx': 'vmware', '.xls': 'vmware', '.csv': 'opca'}
-                export_type = export_types_dict.get(file_ext, 'Extension non autorisée !')  # if the extension is not allowed we will get "extension_not_autorised"
-                if export_type != "Extension non autorisée !":  # if the file is of a type present in the "export_types_dict" dict
-                    exports_files_folder_path = fr"{constantes.EXPORTS_DIR}\exports_{export_type}\\"  # We get where we need to copy the export file
-                    logging.debug(f"exports_files_folder_path : {exports_files_folder_path}")
-                    file_folder_copy_dest = exports_files_folder_path + file  # We create the full path of the new file
-                    logging.debug(f"file_folder_copy_dest : {file_folder_copy_dest}")
-                    file_path = file_chosen[0]  # We get the path of the file to copy
-                    logging.debug(f"file_path : {file_path}")
-                    try:
-                        shutil.copyfile(file_path, file_folder_copy_dest)  # Copy of the file
-                        main_window.textEdit.setText(f"Le fichier  \"{file}\" a été copié dans le répertoire export_{export_type}.\n\nVous pouvez maintenant mettre à jour la base de données afin que ces données soient disponibles dans la recherche.\n\nPour faire cela, aller dans le menu \"Fichier > Mise à jour..\"")
-                    except IOError as e:
-                        print(e)
-                        main_window.textEdit.setText(str(e))
-                else:
-                    main_window.textEdit.setText("Extension de fichier invalide !")
-                    logging.debug("Invalid extension !")
-            else:
-                main_window.textEdit.setText(f"\"{file}\" n'est pas un fichier autorisé !")
-                logging.debug("File not authorized !")
+        
 
     def setup_keyboard_shortcuts(self):
         # We create a shortcut for the Esc key that will close the application
@@ -581,8 +518,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         QtGui.QShortcut(QtGui.QKeySequence('Enter'), self, self.search)
         # We create a shortcut for the ENTER key on the keyboard that will launch the search
         QtGui.QShortcut(QtGui.QKeySequence('Return'), self, self.search)
-        # We create a shortcut for the COPY CTRL+C keys on the keyboard
-        # QtGui.QShortcut(QtGui.QKeySequence.Copy, self, self.copy_selection)
 
     def search(self):
         self.reset_progressbar_statusbar()
@@ -592,15 +527,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         logging.debug(f"search_list : {search_list}")
         search_choice = self.comboBox.currentText()
         logging.debug(f"search_choice : {search_choice}")
-        #main_window.textEdit.setText("Recherche en cours...")  # Pour l'afficher dans la fenêtre
         logging.debug("Création du thread de recherche")  
         self.thread = QtCore.QThread(self)
         self.search_instance = Search(list_to_search=search_list, categorie_to_search_in=search_choice)
         self.search_instance.moveToThread(self.thread)
-        self.search_instance.searched_string_signal.connect(self.searched_string_signal)  # Quand le signal searched_string_signal est émit, on exécute la fonction searched_string_signal
+        self.search_instance.searched_string_signal.connect(self.searched_string_signal_if_signal) 
         self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
         self.search_instance.signal_display_warning_box.connect(self.display_warning_box)
-        self.search_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text)
+        self.search_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text_if_signal)
         self.search_instance.finished.connect(self.thread.quit)  # Quitte le thread quand il est terminé (reçoit un emit dans la classe Tools)
         self.thread.started.connect(self.search_instance.search)
         self.thread.start()
@@ -665,36 +599,23 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.search_instance.runs = False
         self.thread.quit()
         
-    def searched_string_signal(self, searched_string_signal):  # On exécute cette fonction quand le signal searched_string_signal du thread est émit et on récupère la valeur envoyée par le signal
+    def searched_string_signal_if_signal(self, searched_string_signal):  # On exécute cette fonction quand le signal searched_string_signal du thread est émit et on récupère la valeur envoyée par le signal
         logging.debug(f"On a reçu le signal pour {searched_string_signal} pour incrémenter la barre de progression")
         self.prg_dialog.setValue(self.prg_dialog.value() + 1)  # Mise à jour de la barre de progression
         main_window.textEdit.setText(f"Recherche en cours pour : {searched_string_signal}")
         
-    def set_text_in_edit_text(self, text_to_set_in_edit_text):
+    def set_text_in_edit_text_if_signal(self, text_to_set_in_edit_text):
         main_window.textEdit.setText(f"{text_to_set_in_edit_text}")
         
+    def import_list(self):
+        self.window_import_list = ImportList(main_window, tools_instance)  # Je fourni à la classe ImportList l'instance main_window en paramètre
+        self.reset_progressbar_statusbar()
+        self.window_import_list.show()
 
-    # def import_list(self):
-    #     # noinspection PyAttributeOutsideInit
-    #     self.window_import_list = ImportList(main_window, tools_instance)  # Je fourni à la classe ImportList l'instance main_window en paramètre
-    #     self.reset_progressbar_statusbar()
-    #     self.window_import_list.show()
-
-    # def copy_selection(self):
-    #     # Permettre de copier coller avec CTRL+C le text de du textEdit.
-    #     print("CTRL+C finder.pyw detected")
-    #     cursor = self.textEdit.textCursor()  # Mettre dans la variable cursor le text sélectionné dans le textEdit appelé textEdit
-    #     # print('%s' % (cursor.selectedText())) Afficher en console ce qui est sélectionner par la souris (curseur)
-    #     cb = app.clipboard()
-    #     # print(f"Dans le clipboard : {clipboard.text()}") # text() retrieves actuel text from clipboard
-    #     cb.clear(mode=cb.Clipboard)  # Effacer ce qu'il y a dans le Clipboard
-    #     cb.setText(cursor.selectedText(), mode=cb.Clipboard)  # Mettre dans le clipboard le text récupéré dans la variable
-
-
+  
 # MAIN
 
 app = QtWidgets.QApplication([])
 main_window = Window()
-# tools_instance = Tools(main_window, search_list)
 tools_instance = Tools()
 app.exec()

@@ -14,6 +14,7 @@ import constantes
 from DatabaseGestionSqlite import DatabaseGestionSqlite
 from ImportList import ImportList
 from Tools import Tools
+from Search import Search
 from graphique.MainWindow import Ui_MainWindow
 import MyTableModel
 import AlignDelegate
@@ -594,14 +595,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         #main_window.textEdit.setText("Recherche en cours...")  # Pour l'afficher dans la fenêtre
         logging.debug("Création du thread de recherche")  
         self.thread = QtCore.QThread(self)
-        self.tools_instance = Tools(list_to_search=search_list, categorie_to_search_in=search_choice)
-        self.tools_instance.moveToThread(self.thread)
-        self.tools_instance.searched_string_signal.connect(self.searched_string_signal)  # Quand le signal searched_string_signal est émit, on exécute la fonction searched_string_signal
-        self.tools_instance.signal_results_query_search.connect(self.display_in_tableview)
-        self.tools_instance.signal_display_warning_box.connect(self.display_warning_box)
-        self.tools_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text)
-        self.tools_instance.finished.connect(self.thread.quit)  # Quitte le thread quand il est terminé (reçoit un emit dans la classe Tools)
-        self.thread.started.connect(self.tools_instance.search)
+        self.search_instance = Search(list_to_search=search_list, categorie_to_search_in=search_choice)
+        self.search_instance.moveToThread(self.thread)
+        self.search_instance.searched_string_signal.connect(self.searched_string_signal)  # Quand le signal searched_string_signal est émit, on exécute la fonction searched_string_signal
+        self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
+        self.search_instance.signal_display_warning_box.connect(self.display_warning_box)
+        self.search_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text)
+        self.search_instance.finished.connect(self.thread.quit)  # Quitte le thread quand il est terminé (reçoit un emit dans la classe Tools)
+        self.thread.started.connect(self.search_instance.search)
         self.thread.start()
 
         # Création de la barre de progression en fenêtre        
@@ -616,7 +617,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         logging.debug("Signal recherche vide reçu.")
         msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, f"{warning_title}", f"{warning_text}")
         msg_box.exec()
-        self.tools_instance.finished.connect(self.thread.quit)
+        self.search_instance.finished.connect(self.thread.quit)
 
     def display_in_tableview(self, results_query_search):
         # Display data results in tableview
@@ -661,7 +662,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def abort(self):
         logging.debug(f"On a appuyé sur Annuler.")
-        self.tools_instance.runs = False
+        self.search_instance.runs = False
         self.thread.quit()
         
     def searched_string_signal(self, searched_string_signal):  # On exécute cette fonction quand le signal searched_string_signal du thread est émit et on récupère la valeur envoyée par le signal

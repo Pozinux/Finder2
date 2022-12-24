@@ -38,7 +38,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.result_folder_cmdb = ""
         self.result_folder_cmdb_all = ""
         self.exports_folders_dates = ""
-        self.search_choice = ""
 
         # When opening the application, we create the database dans its tables in case they don't already exist
         self.create_database_and_tables()
@@ -523,14 +522,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         logging.debug(f"search_string : {search_string}")
         search_list = search_string.split()
         logging.debug(f"search_list : {search_list}")
-        self.search_choice = self.comboBox.currentText()
-        logging.debug(f"self.search_choice : {self.search_choice}")
+        search_choice = self.comboBox.currentText()
+        logging.debug(f"search_choice : {search_choice}")
         logging.debug("Création du thread de recherche")  
-        self.search_thread(search_list, self.search_choice)
+        self.search_thread(search_list, search_choice)
 
     def search_thread(self, search_list, search_choice):
         self.thread = QtCore.QThread(self)
-        self.search_instance = Search(search_list, self.search_choice)
+        self.search_instance = Search(search_list, search_choice)
         self.search_instance.moveToThread(self.thread)
         self.search_instance.searched_string_signal.connect(self.searched_string_if_signal) 
         self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
@@ -641,14 +640,14 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
 
-        if self.search_choice == 'Equipement':
+        if search_choice == 'Equipement':
             header = ['Nom', 'vCenter ou ESXi (vmware), Management Node (opca)', 'Datacenter (vmware)', 'Cluster (vmware)', 'Nom DNS (vmware)', 'Annotation (vmware)', 'Environnement/Application (CMDB)', 'Type (CMDB)', 'Status opérationnel (CMDB)', 'Type de Système (CMDB)', 'Asset (CMDB)']
 
-        elif self.search_choice == 'Host (ESXi ou CN)':
+        elif search_choice == 'Host (ESXi ou CN)':
             header = ['Nom de l\'ESXi (vmware) ou du Management Node (opca)', 'vCenter (vmware) ou Management Node (opca)']
 
 
-        elif self.search_choice == 'Application':
+        elif search_choice == 'Application':
             header = ['Application (CMDB)', 'Nom']
 
         

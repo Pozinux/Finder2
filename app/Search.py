@@ -95,15 +95,22 @@ class Search(QtCore.QObject):
                                     sql_query_execute = f"""SELECT 
                                                             host_name, 
                                                             management_name 
-                                                            FROM serveur_opca"""
-
-                                elif self.categorie_to_search_in == 'Application':
-                                    sql_query_execute = f"""SELECT 
-                                                            host_name, 
-                                                            management_name 
                                                             FROM serveur_opca 
                                                             WHERE host_name 
                                                             LIKE \'%{search_string}%\'"""
+
+                                elif self.categorie_to_search_in == 'Application':
+                                    sql_query_execute = f"""select DISTINCT c.environment_name,
+                                                            t.serveur_name
+                                                            from (
+                                                            select serveur_name from serveur_cmdb union
+                                                            select serveur_name from serveur_vmware union
+                                                            select serveur_name from serveur_opca
+                                                            ) t
+                                                            left join serveur_cmdb c on c.serveur_name = t.serveur_name
+                                                            left join serveur_vmware v on v.serveur_name = t.serveur_name
+                                                            left join serveur_opca o on o.serveur_name = t.serveur_name 
+                                                            WHERE c.environment_name LIKE \'%{search_string}%\'"""
 
                                 logging.debug(f"Recherche lancée pour {search_string} qui est l'élément à rechercher numéro {file_number_search}")
                                 db_connection.sql_query_execute(sql_query_execute)

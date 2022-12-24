@@ -35,8 +35,9 @@ class ImportList(QtWidgets.QWidget, graphique.ImportListWindow.Ui_ImportListWind
             #self.tools_instance.search(servers_textedit_list)  # TPO A MODIFIER !!!
             servers_textedit_string = ' '.join(servers_textedit_list)
             self.window_instance.lineEdit.setText(servers_textedit_string)
+            self.window_instance.textEdit.setText("Vous pouvez maintenant lancer la recherche en cliquant sur l'icone de recherche ou en appuyant sur la touche entrée.")
         else:
             self.window_instance.textEdit.setText("La recherche n'a pas été faite car la liste fournie était vide.")
             logging.debug(f"Rien n'a été entré dans la barre de recherche")
             self.window_instance.lineEdit.setText("")  # On vide la barre de recherche
-            self.window_instance.tableView.setModel(None)
+            self.window_instance.tableView.setModel(None)  # On vide le tableview (en retirant le model qui lui est appliqué)

@@ -516,7 +516,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         QtGui.QShortcut(QtGui.QKeySequence('Return'), self, self.search)
 
     def search(self):
-        self.reset_progressbar_statusbar()
+        #self.reset_progressbar_statusbar()
         search_string = self.lineEdit.text()
         logging.debug(f"search_string : {search_string}")
         search_list = search_string.split()
@@ -524,8 +524,11 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         search_choice = self.comboBox.currentText()
         logging.debug(f"search_choice : {search_choice}")
         logging.debug("Création du thread de recherche")  
+        self.search_thread(search_list, search_choice)
+
+    def search_thread(self, search_list, search_choice):
         self.thread = QtCore.QThread(self)
-        self.search_instance = Search(list_to_search=search_list, categorie_to_search_in=search_choice)
+        self.search_instance = Search(search_list, search_choice)
         self.search_instance.moveToThread(self.thread)
         self.search_instance.searched_string_signal.connect(self.searched_string_signal_if_signal) 
         self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
@@ -603,10 +606,10 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def set_text_in_edit_text_if_signal(self, text_to_set_in_edit_text):
         main_window.textEdit.setText(f"{text_to_set_in_edit_text}")
         
-    def import_list(self):
-        self.window_import_list = ImportList(main_window)  # Je fourni à la classe ImportList l'instance main_window en paramètre
+    def import_list(self):        
+        self.window_import_list = ImportList(main_window)
         self.reset_progressbar_statusbar()
-        self.window_import_list.show()
+        self.window_import_list.show()        
 
     def list_exports(self, export_type):
         # Check if there are any exports in the folder concerned

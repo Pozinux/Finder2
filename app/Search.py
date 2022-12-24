@@ -109,18 +109,14 @@ class Search(QtCore.QObject):
                                     logging.debug(f"On emet le signal searched_string_signal en passant la search_string en cours -> {search_string}")
                                     self.searched_string_signal.emit(search_string)  # On émet le signal quand on a recherché un nom de la liste donnée par l'utilisateur et on fourni ce nom à l'interface graphique
 
-                        nbr = 0  # To get number of results
-                        list_result = []
-                        list_result_saut = []
+                        # nbr = 0  # To get number of results
+                        # list_result = []
+                        # list_result_saut = []
 
-                        for nbr, result_query_search in enumerate(results_query_search, 1):
-                            serveur_name, management_name, datacenter_name, cluster_name, dns_name, annotation, environment_name, device_type, operational_status, system_type, asset = result_query_search  # unpacking
-                            list_result.append(f"{serveur_name};{management_name};{datacenter_name};{cluster_name};{dns_name};{annotation};{environment_name};{device_type};{operational_status};{system_type};{asset}")
-                            self.list_result_saut = "\n".join(list_result)
-
-                        logging.debug("On envoie le signal de fin de thread de recherche")
-                        self.signal_results_query_search.emit(results_query_search)
-                        self.finished.emit() # Indique que le Thread a terminé son travail
+                        # for nbr, result_query_search in enumerate(results_query_search, 1):
+                        #     serveur_name, management_name, datacenter_name, cluster_name, dns_name, annotation, environment_name, device_type, operational_status, system_type, asset = result_query_search  # unpacking
+                        #     list_result.append(f"{serveur_name};{management_name};{datacenter_name};{cluster_name};{dns_name};{annotation};{environment_name};{device_type};{operational_status};{system_type};{asset}")
+                        #     self.list_result_saut = "\n".join(list_result)
                         
                 elif self.categorie_to_search_in == 'Host (ESXi ou CN)':
                     if self.is_db_empty():
@@ -238,9 +234,6 @@ class Search(QtCore.QObject):
                         #TPO#self.window_instance.progressBar.reset()
                         # #TPO#self.window_instance.progressBar.hide()
 
-                        logging.debug("On envoie le signal de fin de thread de recherche")
-                        self.finished.emit() # Indique que le Thread a terminé son travail
-
                 elif self.categorie_to_search_in == 'Application':
                     if self.is_db_empty():
                         pass
@@ -348,12 +341,13 @@ class Search(QtCore.QObject):
                         #TPO#self.window_instance.statusBar.showMessage(f"Résultats : {str(nbr)} | OK : {str(nbr_result_ok)} | KO : {str(nbr_result_ko)}")
                         #TPO#self.window_instance.progressBar.reset()
                         # #TPO#self.window_instance.progressBar.hide()
-
-                        logging.debug("On envoie le signal de fin de thread de recherche")
-                        self.finished.emit() # Indique que le Thread a terminé son travail
             else:
                 #TPO#self.window_instance.textEdit.setText("Erreur de connexion à la base de données.")
                 logging.debug(db_connection.error_db_connection)
+            
+        logging.debug("On envoie le signal de fin de thread de recherche")
+        self.signal_results_query_search.emit(results_query_search)  # On envoie le résultat de la requête sql pour qu'il soit affiché dans le tableau tableview
+        self.finished.emit() # Indique que le Thread a terminé son travail
 
 
     def is_db_empty(self):

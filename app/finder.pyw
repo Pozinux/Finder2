@@ -47,6 +47,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # Put the focus of the mouse on the input text area
         self.lineEdit.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.lineEdit.setFocus()
+        self.lineEdit.setMaxLength(500000)  # By default, this property contains a value of 32767 donc si on cherche une liste plus longue il va tronquer
         self.showMaximized()  # Pour ouvrir au démarrage en taille max la fenetre principale
 
         self.setup_connections()  # Establish connections between widgets and functions
@@ -530,16 +531,17 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.thread = QtCore.QThread(self)
         self.search_instance = Search(search_list, search_choice)
         self.search_instance.moveToThread(self.thread)
-        self.search_instance.searched_string_signal.connect(self.searched_string_signal_if_signal) 
+        self.search_instance.searched_string_signal.connect(self.searched_string_if_signal) 
         self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
         self.search_instance.signal_display_warning_box.connect(self.display_warning_box)
         self.search_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text_if_signal)
-        self.search_instance.finished.connect(self.thread.quit)
+        #self.search_instance.finished.connect(self.thread.quit)
+        self.search_instance.finished.connect(self.finished_if_signal)
         self.thread.started.connect(self.search_instance.search)
         self.thread.start()
         # Création de la barre de progression en fenêtre        
 
-        self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list))
+        self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list) + 1)
         self.prg_dialog.close()
         self.prg_dialog.canceled.connect(self.abort)
         if len(search_list) > 1:
@@ -552,56 +554,20 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         msg_box.exec()
         self.search_instance.finished.connect(self.thread.quit)
 
-    def display_in_tableview(self, results_query_search):
-        # Display data results in tableview
-        # header table view
-        header = ['Nom', 'vCenter ou ESXi (vmware), Management Node (opca)', 'Datacenter (vmware)', 'Cluster (vmware)', 'Nom DNS (vmware)', 'Annotation (vmware)', 'Environnement/Application (CMDB)', 'Type (CMDB)', 'Status opérationnel (CMDB)', 'Type de Système (CMDB)', 'Asset (CMDB)']
-        # Create instance table view
-        table_model = MyTableModel.MyTableModel(results_query_search, header, window_instance=main_window)
-        main_window.tableView.setModel(table_model)
-        
-        # install event filter pour pouvoir récupérer un évenement d'appui de CTRL+C (copy) quand on a sélectionné des cellules
-        main_window.tableView.installEventFilter(table_model)
-        # set color and style header
-        # stylesheet = "::section{Background-color:rgb(179, 224, 229);border-radius:14px;}"   # Pour ne pas avoir les bordures des cases du header
-        stylesheet = "::section{Background-color:rgb(179, 224, 229)}"  # Couleur bleu ciel pour l'entête du tableau
-        main_window.tableView.horizontalHeader().setStyleSheet(stylesheet)
-        # set font
-        # font = QtGui.QFont("Courier New", 14)
-        # self.tableView.setFont(font)
-        # main_window.tableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)  # Ajuster la zone tableview aux colonnes (ne fonctionne pas ??!)
-        # set column width to fit contents (set font first!)
-        main_window.tableView.resizeColumnsToContents()
-        # stretch the last column to the view so that the table view fit the layout
-        main_window.tableView.horizontalHeader().setStretchLastSection(True)
-        delegate = AlignDelegate.AlignDelegate(main_window.tableView)
-        # main_window.tableView.setItemDelegateForColumn(2, delegate)  # Pour Centrer le texte de la colonne id 2 (donc la troisième)
-        main_window.tableView.setItemDelegate(delegate)  # for all columns
-        # enable sorting
-        main_window.tableView.setSortingEnabled(True)
-        #main_window.statusBar.showMessage(f"Résultats : {str(nbr)} | OK : {str(nbr_result_ok)} | KO : {str(nbr_result_ko)}")
-        main_window.progressBar.reset()
-        # main_window.progressBar.hide()
-
-        main_window.textEdit.setText("Sélectionnez des cellules puis CTRL+C pour les copier.\n\nFaites CTRL+A pour sélectionner toutes les données puis CTRL+C puis CTRL+V pour coller dans un notepad.\nLes données seront automatiquement formatées en CSV (avec des ';').\n\nVous pouvez également trier les colonnes directement dans l'interface.")
-
-        # # Cacher des colonnes  # TPO
-        # if main_window.checkBox_datacenter.isChecked() == False:
-        #     main_window.tableView.hideColumn(2)
-        # if main_window.checkBox_cluster.isChecked() == False:
-        #     main_window.tableView.hideColumn(3)
-        # if main_window.checkBox_annotation.isChecked() == False:
-        #     main_window.tableView.hideColumn(5)
-
     def abort(self):
         logging.debug(f"On a appuyé sur Annuler.")
         self.search_instance.runs = False
         self.thread.quit()
         
-    def searched_string_signal_if_signal(self, searched_string_signal):  # On exécute cette fonction quand le signal searched_string_signal du thread est émit et on récupère la valeur envoyée par le signal
+    def searched_string_if_signal(self, searched_string_signal):  # On exécute cette fonction quand le signal searched_string_signal du thread est émit et on récupère la valeur envoyée par le signal
         logging.debug(f"On a reçu le signal pour {searched_string_signal} pour incrémenter la barre de progression")
         self.prg_dialog.setValue(self.prg_dialog.value() + 1)  # Mise à jour de la barre de progression
         main_window.textEdit.setText(f"Recherche en cours pour : {searched_string_signal}")
+
+    def finished_if_signal(self):
+        logging.debug(f"Traitement terminé. On quitte le thread")
+        self.thread.quit()
+        self.prg_dialog.setValue(self.prg_dialog.value() + 1)  # Mise à jour de la barre de progression
         
     def set_text_in_edit_text_if_signal(self, text_to_set_in_edit_text):
         main_window.textEdit.setText(f"{text_to_set_in_edit_text}")
@@ -666,6 +632,47 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return file_authorized
 
+
+    def display_in_tableview(self, results_query_search):
+        # Display data results in tableview
+        # header table view
+        header = ['Nom', 'vCenter ou ESXi (vmware), Management Node (opca)', 'Datacenter (vmware)', 'Cluster (vmware)', 'Nom DNS (vmware)', 'Annotation (vmware)', 'Environnement/Application (CMDB)', 'Type (CMDB)', 'Status opérationnel (CMDB)', 'Type de Système (CMDB)', 'Asset (CMDB)']
+        # Create instance table view
+        table_model = MyTableModel.MyTableModel(results_query_search, header, window_instance=main_window)
+        main_window.tableView.setModel(table_model)
+        
+        # install event filter pour pouvoir récupérer un évenement d'appui de CTRL+C (copy) quand on a sélectionné des cellules
+        main_window.tableView.installEventFilter(table_model)
+        # set color and style header
+        # stylesheet = "::section{Background-color:rgb(179, 224, 229);border-radius:14px;}"   # Pour ne pas avoir les bordures des cases du header
+        stylesheet = "::section{Background-color:rgb(179, 224, 229)}"  # Couleur bleu ciel pour l'entête du tableau
+        main_window.tableView.horizontalHeader().setStyleSheet(stylesheet)
+        # set font
+        # font = QtGui.QFont("Courier New", 14)
+        # self.tableView.setFont(font)
+        # main_window.tableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)  # Ajuster la zone tableview aux colonnes (ne fonctionne pas ??!)
+        # set column width to fit contents (set font first!)
+        main_window.tableView.resizeColumnsToContents()
+        # stretch the last column to the view so that the table view fit the layout
+        main_window.tableView.horizontalHeader().setStretchLastSection(True)
+        delegate = AlignDelegate.AlignDelegate(main_window.tableView)
+        # main_window.tableView.setItemDelegateForColumn(2, delegate)  # Pour Centrer le texte de la colonne id 2 (donc la troisième)
+        main_window.tableView.setItemDelegate(delegate)  # for all columns
+        # enable sorting
+        main_window.tableView.setSortingEnabled(True)
+        #main_window.statusBar.showMessage(f"Résultats : {str(nbr)} | OK : {str(nbr_result_ok)} | KO : {str(nbr_result_ko)}")
+        main_window.progressBar.reset()
+        # main_window.progressBar.hide()
+
+        main_window.textEdit.setText("Sélectionnez des cellules puis CTRL+C pour les copier.\n\nFaites CTRL+A pour sélectionner toutes les données puis CTRL+C puis CTRL+V pour coller dans un notepad.\nLes données seront automatiquement formatées en CSV (avec des ';').\n\nVous pouvez également trier les colonnes directement dans l'interface.")
+
+        # # Cacher des colonnes  # TPO
+        # if main_window.checkBox_datacenter.isChecked() == False:
+        #     main_window.tableView.hideColumn(2)
+        # if main_window.checkBox_cluster.isChecked() == False:
+        #     main_window.tableView.hideColumn(3)
+        # if main_window.checkBox_annotation.isChecked() == False:
+        #     main_window.tableView.hideColumn(5)
   
 # MAIN
 

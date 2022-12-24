@@ -14,7 +14,7 @@ class Search(QtCore.QObject):
 
     finished = QtCore.Signal()  # Signal pour fin du Thread
     searched_string_signal = QtCore.Signal(object)  # On créé un signal pour envoyer le mot cherché en cours vers la fenêtre principale
-    signal_results_query_search = QtCore.Signal(object)  # On créé un signal pour envoyer le résultat de la recherche vers la fenêtre principale
+    signal_results_query_search = QtCore.Signal(object, object)  # On créé un signal pour envoyer le résultat de la recherche vers la fenêtre principale
     signal_textEdit_setText = QtCore.Signal(object)  # On créé un signal pour envoyer une string vers la fenêtre principale
     signal_display_warning_box = QtCore.Signal(object, object)  # On créé un signal pour envoyer un titre et un texte pour une popup warning vers la fenêtre principale
     
@@ -116,10 +116,19 @@ class Search(QtCore.QObject):
                                 db_connection.sql_query_execute(sql_query_execute)
                                 rows_result_sql = db_connection.cursor.fetchall()
                                 logging.debug(f"rows_result_sql: {rows_result_sql}")
+                                
                                 if not rows_result_sql:
                                     logging.debug(f"La recherche SQL a retourné un résultat vide")
                                     nbr_result_ko += 1
-                                    results_query_search.append((search_string, 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports'))
+
+                                    # En cas de résultat KO, on a pas le même nombre de colonnes en fonction de la catégorie recherchée
+                                    if self.categorie_to_search_in == 'Equipement':
+                                        results_query_search.append((search_string, 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports', 'Non présent dans les exports'))
+                                    elif self.categorie_to_search_in == 'Host (ESXi ou CN)':
+                                        results_query_search.append((search_string, 'Non présent dans les exports'))
+                                    elif self.categorie_to_search_in == 'Application':
+                                        results_query_search.append((search_string, 'Non présent dans les exports'))
+                                
                                 if rows_result_sql:
                                     logging.debug(f"La recherche SQL a retourné un résultat")
                                     nbr_item_in_list = len(rows_result_sql)
@@ -133,7 +142,7 @@ class Search(QtCore.QObject):
                 logging.debug(db_connection.error_db_connection)
             
         logging.debug("On envoie le signal de fin de thread de recherche")
-        self.signal_results_query_search.emit(results_query_search)  # On envoie le résultat de la requête sql pour qu'il soit affiché dans le tableau tableview
+        self.signal_results_query_search.emit(results_query_search, self.categorie_to_search_in)  # On envoie le résultat de la requête sql pour qu'il soit affiché dans le tableau tableview
         self.finished.emit() # Indique que le Thread a terminé son travail
 
 

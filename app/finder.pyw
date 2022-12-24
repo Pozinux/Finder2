@@ -633,12 +633,11 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         return file_authorized
 
 
-    def display_in_tableview(self, results_query_search, ):
+    def display_in_tableview(self, results_query_search, search_choice):
         # Display data results in tableview
         # header table view
 
-
-
+        logging.debug(f"search_choice : {search_choice}")
 
         if search_choice == 'Equipement':
             header = ['Nom', 'vCenter ou ESXi (vmware), Management Node (opca)', 'Datacenter (vmware)', 'Cluster (vmware)', 'Nom DNS (vmware)', 'Annotation (vmware)', 'Environnement/Application (CMDB)', 'Type (CMDB)', 'Status opérationnel (CMDB)', 'Type de Système (CMDB)', 'Asset (CMDB)']
@@ -646,16 +645,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         elif search_choice == 'Host (ESXi ou CN)':
             header = ['Nom de l\'ESXi (vmware) ou du Management Node (opca)', 'vCenter (vmware) ou Management Node (opca)']
 
-
         elif search_choice == 'Application':
             header = ['Application (CMDB)', 'Nom']
 
-        
-
-
-        
-
-        
         # Create instance table view
         table_model = MyTableModel.MyTableModel(results_query_search, header, window_instance=main_window)
         main_window.tableView.setModel(table_model)

@@ -390,7 +390,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.prg_dialog_update_db = QtWidgets.QProgressDialog("Mise à jour de la base de données en cours...", "Annuler...", 1, len(files_paths_authorized_list) + 1)
         self.prg_dialog_update_db.close()
-        self.prg_dialog_update_db.canceled.connect(self.abort)
+        #self.prg_dialog_update_db.canceled.connect(self.abort)
+        self.prg_dialog_update_db.setCancelButton(None)
         if len(files_paths_authorized_list) > 1:
             self.prg_dialog_update_db.show()
 

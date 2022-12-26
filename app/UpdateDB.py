@@ -145,7 +145,7 @@ class UpdateDB(QtCore.QObject):
                 logging.debug("DELETE FROM serveur_" + self.export_type)
                 db_connection.sql_query_execute("DELETE FROM serveur_" + self.export_type)
                 #main_window.textEdit.setText(f"Insertion des données de {export_type} dans la base...")
-                self.signal_textEdit_setText.emit("Insertion des données de {self.export_type} dans la base...")
+                self.signal_textEdit_setText.emit(f"Insertion des données de {self.export_type} dans la base...")
                 if self.export_type == "cmdb":
                     db_connection.sql_query_executemany(f"INSERT INTO serveur_cmdb (serveur_name, environment_name, device_type, operational_status, system_type, asset) VALUES (?,?,?,?,?,?)", list_data_cmdb)
                 elif self.export_type == "cmdb_all":

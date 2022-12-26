@@ -5,7 +5,6 @@ import pathlib
 import shutil
 import time
 
-import pandas
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtGui import QPixmap, QIcon
 from pathlib import Path
@@ -17,6 +16,7 @@ from Search import Search
 from graphique.MainWindow import Ui_MainWindow
 import MyTableModel
 import AlignDelegate
+from UpdateDB import UpdateDB
 
 
 # Class main graphical window
@@ -345,10 +345,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
            Warning, if there is no authorized file, the database will be reset to 0 (because we first drop the database)
            The principle is that the bdd is iso with the export folder
            """
-        self.reset_progressbar_statusbar()
-        data_list = []
-        list_data_cmdb = []
-        df_cmdb = None
+
         files_paths_authorized_list = []
 
         logging.debug(f"Checking before updating that exports folder {export_type} is not empty.")
@@ -374,139 +371,39 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
                 main_window.textEdit.setText(f"Le fichier '{file}' n'est pas un fichier authorisé à être importé dans la base de données.\nImportation en cours annulée.\nVeuillez supprimer ou renommer ce fichier et recommencer.\nConsultez la liste des fichiers autorisés dans le menu 'Paramètres' puis 'Lister les fichiers autorisés'.")
                 return False
 
-        logging.debug(export_type)
-        if export_type in ["opca", "vmware"]:
-            # Create list of list from vmware and opca export files
-            files_paths_authorized_list_len = len(files_paths_authorized_list)
-            step = 0
-            logging.debug(files_paths_authorized_list_len)
-            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                file_authorized = os.path.basename(file_path_authorized)
-                logging.debug(format(file_authorized))
-                main_window.textEdit.setText(f"Récupération des données depuis le fichier {format(file_authorized)}...")
-                QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-                file_name_authorized = os.path.splitext(file_authorized)[0]
-
-                # Update of the progress bar
-                main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
-                for between_pourcentage in range(step, pourcentage_number):
-                    time.sleep(0.02)
-                    main_window.statusBar.showMessage(f"Action en cours de {between_pourcentage}% ...")
-                    main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
-
-                if export_type == "opca":
-                    df = pandas.read_csv(file_path_authorized, sep=';')
-                    # Add a column to the dataframe
-                    df['DNS Name'] = "N/A"
-                    # Add a column to the dataframe
-                    df['management'] = file_name_authorized
-                    # The dataframe will contains only these colums
-                    df = df[["Machine Virtuelle", "DNS Name", "management", "Compute Node"]]
-
-                else:
-                    df = pandas.read_excel(file_path_authorized)
-                    # Add a column to the dataframe
-                    df['management'] = file_name_authorized
-                    # The dataframe will contains only these colums
-                    df = df[["VM", "DNS Name", "management", "Host", "Datacenter", "Cluster", "Annotation"]]
-
-                # df = df.where((pandas.notnull(df)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
-                list_data_temp = df.values.tolist()
-                data_list.extend(list_data_temp)
-            logging.debug(data_list)  # Donne une liste de listes
-        elif export_type == "cmdb":
-            # Create list of list from cmdb export file
-            # print(files_paths_authorized_list)
-            list_data_cmdb = []
-            files_paths_authorized_list_len = len(files_paths_authorized_list)
-            step = 0
-            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                file_authorized = os.path.basename(file_path_authorized)
-                main_window.textEdit.setText(f"Data retrieval from the file {format(file_authorized)}...")
-                QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-
-                # Update of the progress bar
-                main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
-                for between_pourcentage in range(step, pourcentage_number):
-                    time.sleep(0.02)
-                    main_window.statusBar.showMessage(f"Processing of {between_pourcentage}% ...")
-                    main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
-
-                    df_cmdb = pandas.read_csv(file_path_authorized, sep=',', encoding="Windows-1252")
-                    # The dataframe will contains only these colums
-                    df_cmdb = df_cmdb[["ci6_name", "ci2_name", "ci6_u_device_type", "ci6_operational_status", "ci6_sys_class_name", "ci6_asset_tag"]]
-
-                # df_cmdb = df_cmdb.where((pandas.notnull(df_cmdb)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
-                list_data_cmdb_temp = df_cmdb.values.tolist()
-                # print(list_data_cmdb_temp)
-                list_data_cmdb.extend(list_data_cmdb_temp)
-                # print(list_data_cmdb)
-
-        elif export_type == "cmdb_all":
-            # Create list of list from cmdb export file
-            # print(files_paths_authorized_list)
-            list_data_cmdb_all = []
-            files_paths_authorized_list_len = len(files_paths_authorized_list)
-            step = 0
-            for file_number, file_path_authorized in enumerate(files_paths_authorized_list, 1):
-                file_authorized = os.path.basename(file_path_authorized)
-                main_window.textEdit.setText(f"Data retrieval from the file {format(file_authorized)}...")
-                QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-
-                # Update of the progress bar
-                main_window.progressBar.show()
-                pourcentage_number = (file_number * 100 - 1) // files_paths_authorized_list_len
-                for between_pourcentage in range(step, pourcentage_number):
-                    time.sleep(0.02)
-                    main_window.statusBar.showMessage(f"Processing of {between_pourcentage}% ...")
-                    main_window.progressBar.setValue(between_pourcentage)
-                    step = (file_number * 100 - 1) // files_paths_authorized_list_len
-
-                    df_cmdb_all = pandas.read_csv(file_path_authorized, sep=',', encoding="Windows-1252")
-                    # The dataframe will contains only these colums
-                    df_cmdb_all = df_cmdb_all[["name", "u_platform_type", "u_device_type", "operational_status", "sys_class_name"]]
-
-                # df_cmdb_all = df_cmdb_all.where((pandas.notnull(df_cmdb_all)), 'N/A')  # Remplacer les 'nan' (générés par panda quand il n'y a pas de valeur dans la case excel) par des 'N/A' sinon SQL traitera les 'nan' comme des '0'
-                list_data_cmdb_all_temp = df_cmdb_all.values.tolist()
-                # print(list_data_cmdb_all_temp)
-                list_data_cmdb_all.extend(list_data_cmdb_all_temp)
-                # print(list_data_cmdb_all)
-
-        main_window.textEdit.setText("Connexion à la base...")
-        QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-        time.sleep(2)  # The connection is sometimes so fast that there is no time to display the text that indicates the connection
-        with DatabaseGestionSqlite() as db_connection:  # "with" allows you to use a context manager that will automatically call the disconnect function when you exit the scope
-            if db_connection.error_db_connection is None:
-                logging.debug("DELETE FROM serveur_" + export_type)
-                db_connection.sql_query_execute("DELETE FROM serveur_" + export_type)
-                main_window.textEdit.setText(f"Insertion des données de {export_type} dans la base...")
-                QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-                if export_type == "cmdb":
-                    db_connection.sql_query_executemany(f"INSERT INTO serveur_cmdb (serveur_name, environment_name, device_type, operational_status, system_type, asset) VALUES (?,?,?,?,?,?)", list_data_cmdb)
-                elif export_type == "cmdb_all":
-                    db_connection.sql_query_executemany(f"INSERT INTO serveur_cmdb_all (serveur_name, environment_name, device_type, operational_status, system_type) VALUES (?,?,?,?,?)", list_data_cmdb_all)
-
-                elif export_type == "opca":
-                    db_connection.sql_query_executemany(f"INSERT INTO serveur_opca (serveur_name, dns_name, management_name, host_name) VALUES (?,?,?,?)", data_list)
-                elif export_type == "vmware":
-                    logging.debug(data_list)
-                    db_connection.sql_query_executemany(f"INSERT INTO serveur_vmware (serveur_name, dns_name, management_name, host_name, datacenter_name, cluster_name, annotation) VALUES (?,?,?,?,?,?,?)", data_list)
-                if db_connection.error_db_execution is None:
-                    main_window.textEdit.setText(f"La base de données {export_type} contient {str(db_connection.cursor.rowcount)} lignes.")
-                    main_window.progressBar.setValue(100)  # 100 -> 100%
-                    main_window.statusBar.showMessage("Mise à jour de la base de données terminée !")
-                else:
-                    logging.debug(db_connection.error_db_execution)
-                    main_window.textEdit.setText("Erreur lors de l'insertion des données dans la base.")
-            else:
-                logging.debug(db_connection.error_db_connection)
-                main_window.textEdit.setText("Erreur de connexion à la base de données.")
-            main_window.reset_progressbar_statusbar()
+        logging.debug(f"export_type : {export_type}")
         
+        logging.debug("Création du thread de mise à jour")  
+        self.update_db_thread(export_type, files_paths_authorized_list)
+
+
+    def update_db_thread(self, export_type, files_paths_authorized_list):
+        self.thread = QtCore.QThread(self)
+        self.update_db_instance = UpdateDB(export_type, files_paths_authorized_list)
+        self.update_db_instance.moveToThread(self.thread)
+        self.update_db_instance.signal_file_authorized.connect(self.file_authorized_if_signal) 
+        self.update_db_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text_if_signal)
+        self.update_db_instance.finished.connect(self.finished_updatedb_if_signal)
+        self.thread.started.connect(self.update_db_instance.update_db)
+        self.thread.start()
+        # Création de la barre de progression en fenêtre        
+
+        self.prg_dialog_update_db = QtWidgets.QProgressDialog("Mise à jour de la base de données en cours...", "Annuler...", 1, len(files_paths_authorized_list) + 1)
+        self.prg_dialog_update_db.close()
+        self.prg_dialog_update_db.canceled.connect(self.abort)
+        if len(files_paths_authorized_list) > 1:
+            self.prg_dialog_update_db.show()
+
+
+    def file_authorized_if_signal(self, file_authorized_signal):
+        logging.debug(f"On a reçu le signal pour {file_authorized_signal} pour incrémenter la barre de progression")
+        self.prg_dialog_update_db.setValue(self.prg_dialog_update_db.value() + 1)  # Mise à jour de la barre de progression
+        main_window.textEdit.setText(f"Mise à jour en cours à partir de : {file_authorized_signal}")
+
+    def finished_updatedb_if_signal(self):
+        logging.debug(f"Traitement terminé. On quitte le thread")
+        self.thread.quit()
+        self.prg_dialog_update_db.setValue(self.prg_dialog_update_db.value() + 1)  # Mise à jour de la barre de progression à 100%
 
     def setup_keyboard_shortcuts(self):
         # We create a shortcut for the Esc key that will close the application
@@ -567,7 +464,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def finished_if_signal(self):
         logging.debug(f"Traitement terminé. On quitte le thread")
         self.thread.quit()
-        self.prg_dialog.setValue(self.prg_dialog.value() + 1)  # Mise à jour de la barre de progression
+        self.prg_dialog.setValue(self.prg_dialog.value() + 1)  # Mise à jour de la barre de progression à 100%
         
     def set_text_in_edit_text_if_signal(self, text_to_set_in_edit_text):
         main_window.textEdit.setText(f"{text_to_set_in_edit_text}")

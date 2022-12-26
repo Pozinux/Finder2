@@ -311,12 +311,12 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def create_database_and_tables(self):
         """ Creates database and tables """
         QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-        time.sleep(2)  # The connection is sometimes so fast that there is no time to display the text that indicates the connection
+        #time.sleep(2)  # The connection is sometimes so fast that there is no time to display the text that indicates the connection
         with DatabaseGestionSqlite() as db_connection:  # "with" allows you to use a context manager that will automatically call the disconnect function when you exit the scope
             if db_connection.error_db_connection is None:
                 logging.debug("Creating database and its tables if they do not already exist.")
                 QtWidgets.QApplication.processEvents()  # Force a refresh of the UI
-                time.sleep(2)  # The connection is sometimes so fast that there is no time to display the text that indicates the connection
+                #time.sleep(2)  # The connection is sometimes so fast that there is no time to display the text that indicates the connection
                 db_connection.sql_query_execute("BEGIN TRANSACTION;")
                 db_connection.sql_query_execute("CREATE TABLE IF NOT EXISTS 'serveur_vmware' ('serveur_name' text, 'dns_name' text,'host_name' text, 'management_name' text, 'datacenter_name' TEXT, 'cluster_name' TEXT, 'annotation' TEXT);")
                 db_connection.sql_query_execute("CREATE TABLE IF NOT EXISTS 'serveur_opca' ('serveur_name' text, 'dns_name' text, 'host_name' text, 'management_name' text);")
@@ -383,6 +383,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.update_db_instance.moveToThread(self.thread)
         self.update_db_instance.signal_file_authorized.connect(self.file_authorized_if_signal) 
         self.update_db_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text_if_signal)
+        #self.update_db_instance.signal_result_update_db.connect(self.set_text_in_edit_text_if_signal)
         self.update_db_instance.finished.connect(self.finished_updatedb_if_signal)
         self.thread.started.connect(self.update_db_instance.update_db)
         self.thread.start()
@@ -390,10 +391,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.prg_dialog_update_db = QtWidgets.QProgressDialog("Mise à jour de la base de données en cours...", "Annuler...", 1, len(files_paths_authorized_list) + 1)
         self.prg_dialog_update_db.close()
-        #self.prg_dialog_update_db.canceled.connect(self.abort)
+        self.prg_dialog_update_db.setMinimumDuration(0)
         self.prg_dialog_update_db.setCancelButton(None)
-        if len(files_paths_authorized_list) > 1:
-            self.prg_dialog_update_db.show()
+        self.prg_dialog_update_db.show()
 
 
     def file_authorized_if_signal(self, file_authorized_signal):
@@ -441,9 +441,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list) + 1)
         self.prg_dialog.close()
+        self.prg_dialog.setMinimumDuration(0)
         self.prg_dialog.canceled.connect(self.abort)
-        if len(search_list) > 1:
-            self.prg_dialog.show()
+        self.prg_dialog.show()
 
     def display_warning_box(self, warning_title, warning_text):
         self.prg_dialog.hide()
@@ -535,6 +535,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # Display data results in tableview
         # header table view
 
+        logging.debug(f"Lancement fonction display_in_tableview")
+
         logging.debug(f"search_choice : {search_choice}")
 
         if search_choice == 'Equipement':
@@ -547,6 +549,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             header = ['Application (CMDB)', 'Nom']
 
         # Create instance table view
+        logging.debug(f"Création instance MyTableModel")
         table_model = MyTableModel.MyTableModel(results_query_search, header, window_instance=main_window)
         main_window.tableView.setModel(table_model)
         

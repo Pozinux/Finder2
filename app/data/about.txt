@@ -1,6 +1,7 @@
-Finder 1.0.7
+Finder 2.0.0
 
 - Application : Python 3.7
 - Base de donnees : SQlite
+- Interface graphique : PySide6
 - Auteur : Timothe Poznanski
 - Date : 2019

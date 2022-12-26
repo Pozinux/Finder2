@@ -1,115 +1,125 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'H:\data\users\tpo\Tools\GITLAB\finder\app\graphique\MainWindow.ui',
-# licensing of 'H:\data\users\tpo\Tools\GITLAB\finder\app\graphique\MainWindow.ui' applies.
-#
-# Created: Thu Aug 19 18:39:21 2021
-#      by: pyside2-uic  running on PySide2 5.11.2
-#
-# WARNING! All changes made in this file will be lost!
+################################################################################
+## Form generated from reading UI file 'MainWindowMkXXcQ.ui'
+##
+## Created by: Qt User Interface Compiler version 6.4.1
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
+    QHBoxLayout, QHeaderView, QLineEdit, QMainWindow,
+    QMenu, QMenuBar, QPushButton, QSizePolicy,
+    QStatusBar, QTabWidget, QTableView, QTextEdit,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
+        if not MainWindow.objectName():
+            MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(1022, 701)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(10)
         MainWindow.setFont(font)
-        MainWindow.setStyleSheet("")
-        MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setStyleSheet("")
-        self.centralwidget.setObjectName("centralwidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName("gridLayout")
-        self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
-        self.textEdit.setMaximumSize(QtCore.QSize(16777215, 400))
-        self.textEdit.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.textEdit.setStyleSheet("")
-        self.textEdit.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.textEdit.setObjectName("textEdit")
-        self.gridLayout.addWidget(self.textEdit, 6, 0, 1, 5)
-        self.line = QtWidgets.QFrame(self.centralwidget)
-        self.line.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line.setObjectName("line")
-        self.gridLayout.addWidget(self.line, 5, 0, 1, 5)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setText("")
-        self.pushButton.setObjectName("pushButton")
+        MainWindow.setStyleSheet(u"")
+        MainWindow.setTabShape(QTabWidget.Rounded)
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName(u"centralwidget")
+        self.centralwidget.setStyleSheet(u"")
+        self.gridLayout = QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.textEdit = QTextEdit(self.centralwidget)
+        self.textEdit.setObjectName(u"textEdit")
+        self.textEdit.setMaximumSize(QSize(16777215, 400))
+        self.textEdit.setFocusPolicy(Qt.NoFocus)
+        self.textEdit.setStyleSheet(u"")
+        self.textEdit.setFrameShadow(QFrame.Plain)
+
+        self.gridLayout.addWidget(self.textEdit, 4, 0, 1, 4)
+
+        self.lineEdit = QLineEdit(self.centralwidget)
+        self.lineEdit.setObjectName(u"lineEdit")
+        self.lineEdit.setStyleSheet(u"")
+
+        self.gridLayout.addWidget(self.lineEdit, 1, 1, 1, 2)
+
+        self.tableView = QTableView(self.centralwidget)
+        self.tableView.setObjectName(u"tableView")
+
+        self.gridLayout.addWidget(self.tableView, 2, 0, 1, 4)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.pushButton = QPushButton(self.centralwidget)
+        self.pushButton.setObjectName(u"pushButton")
+
         self.horizontalLayout.addWidget(self.pushButton)
-        self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
+
+        self.pushButton_2 = QPushButton(self.centralwidget)
+        self.pushButton_2.setObjectName(u"pushButton_2")
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setText("")
-        self.pushButton_2.setObjectName("pushButton_2")
+
         self.horizontalLayout.addWidget(self.pushButton_2)
-        self.gridLayout.addLayout(self.horizontalLayout, 2, 4, 1, 1)
-        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setStyleSheet("")
-        self.lineEdit.setText("")
-        self.lineEdit.setObjectName("lineEdit")
-        self.gridLayout.addWidget(self.lineEdit, 2, 1, 1, 3)
-        self.tableView = QtWidgets.QTableView(self.centralwidget)
-        self.tableView.setObjectName("tableView")
-        self.gridLayout.addWidget(self.tableView, 4, 0, 1, 5)
-        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setTextVisible(False)
-        self.progressBar.setObjectName("progressBar")
-        self.gridLayout.addWidget(self.progressBar, 3, 0, 1, 5)
-        self.comboBox = QtWidgets.QComboBox(self.centralwidget)
-        self.comboBox.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.comboBox.setObjectName("comboBox")
-        self.gridLayout.addWidget(self.comboBox, 2, 0, 1, 1)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.checkBox_datacenter = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_datacenter.setEnabled(False)
-        self.checkBox_datacenter.setObjectName("checkBox_datacenter")
-        self.horizontalLayout_2.addWidget(self.checkBox_datacenter)
-        self.checkBox_cluster = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_cluster.setEnabled(False)
-        self.checkBox_cluster.setObjectName("checkBox_cluster")
-        self.horizontalLayout_2.addWidget(self.checkBox_cluster)
-        self.checkBox_annotation = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox_annotation.setEnabled(False)
-        self.checkBox_annotation.setObjectName("checkBox_annotation")
-        self.horizontalLayout_2.addWidget(self.checkBox_annotation)
-        self.gridLayout.addLayout(self.horizontalLayout_2, 0, 0, 1, 1)
+
+
+        self.gridLayout.addLayout(self.horizontalLayout, 1, 3, 1, 1)
+
+        self.comboBox = QComboBox(self.centralwidget)
+        self.comboBox.setObjectName(u"comboBox")
+        self.comboBox.setMaximumSize(QSize(16777215, 16777215))
+
+        self.gridLayout.addWidget(self.comboBox, 1, 0, 1, 1)
+
+        self.line = QFrame(self.centralwidget)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+
+        self.gridLayout.addWidget(self.line, 3, 0, 1, 4)
+
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1022, 18))
-        self.menuBar.setObjectName("menuBar")
-        self.menuParameters = QtWidgets.QMenu(self.menuBar)
-        self.menuParameters.setObjectName("menuParameters")
-        self.menuFile = QtWidgets.QMenu(self.menuBar)
-        self.menuFile.setObjectName("menuFile")
-        self.menuAbout = QtWidgets.QMenu(self.menuBar)
-        self.menuAbout.setObjectName("menuAbout")
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 1022, 24))
+        self.menuParameters = QMenu(self.menuBar)
+        self.menuParameters.setObjectName(u"menuParameters")
+        self.menuFile = QMenu(self.menuBar)
+        self.menuFile.setObjectName(u"menuFile")
+        self.menuAbout = QMenu(self.menuBar)
+        self.menuAbout.setObjectName(u"menuAbout")
         MainWindow.setMenuBar(self.menuBar)
-        self.statusBar = QtWidgets.QStatusBar(MainWindow)
-        self.statusBar.setStyleSheet("")
+        self.statusBar = QStatusBar(MainWindow)
+        self.statusBar.setObjectName(u"statusBar")
+        self.statusBar.setStyleSheet(u"")
         self.statusBar.setSizeGripEnabled(True)
-        self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
+
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuParameters.menuAction())
         self.menuBar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        QMetaObject.connectSlotsByName(MainWindow)
+    # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "Finder", None, -1))
-        self.lineEdit.setPlaceholderText(QtWidgets.QApplication.translate("MainWindow", "\"Serveur_1\", \"Serv\", \"124\", \"CDV\" etc.. Possibilité de saisir plusieurs entrées séparées par un espace.", None, -1))
-        self.checkBox_datacenter.setText(QtWidgets.QApplication.translate("MainWindow", "Datacenter VMware", None, -1))
-        self.checkBox_cluster.setText(QtWidgets.QApplication.translate("MainWindow", "Cluster VMware", None, -1))
-        self.checkBox_annotation.setText(QtWidgets.QApplication.translate("MainWindow", "Annotation VMware", None, -1))
-        self.menuParameters.setTitle(QtWidgets.QApplication.translate("MainWindow", "Paramètres", None, -1))
-        self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "Fichier", None, -1))
-        self.menuAbout.setTitle(QtWidgets.QApplication.translate("MainWindow", "A propos", None, -1))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Finder", None))
+        self.lineEdit.setText("")
+        self.lineEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\"Serveur_1\", \"Serv\", \"124\", \"CDV\" etc.. Possibilit\u00e9 de saisir plusieurs entr\u00e9es s\u00e9par\u00e9es par un espace.", None))
+        self.pushButton.setText("")
+        self.pushButton_2.setText("")
+        self.menuParameters.setTitle(QCoreApplication.translate("MainWindow", u"Param\u00e8tres", None))
+        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"Fichier", None))
+        self.menuAbout.setTitle(QCoreApplication.translate("MainWindow", u"A propos", None))
+    # retranslateUi
 

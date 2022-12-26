@@ -14,8 +14,5 @@ EXPORTS_OPCA_DIR = os.path.join(EXPORTS_DIR, "exports_opca")
 EXPORTS_CMDB_DIR = os.path.join(EXPORTS_DIR, "exports_cmdb")
 EXPORTS_CMDB_ALL_DIR = os.path.join(EXPORTS_DIR, "exports_cmdb_all")
 DB_SQLITE_FILE = os.path.join(DATA_DIR, "sqlite_db_file.db")
-CHECKBOX_DATACENTER = True
-CHECKBOX_CLUSTER = True
-CHECKBOX_ANNOTATION = True
 
 logging.debug(f"DB_SQLITE_FILE -> {DB_SQLITE_FILE}")

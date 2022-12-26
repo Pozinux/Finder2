@@ -29,7 +29,7 @@
     <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="6" column="0" colspan="5">
+    <item row="4" column="0" colspan="4">
      <widget class="QTextEdit" name="textEdit">
       <property name="maximumSize">
        <size>
@@ -48,14 +48,23 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="0" colspan="5">
-     <widget class="Line" name="line">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+    <item row="1" column="1" colspan="2">
+     <widget class="QLineEdit" name="lineEdit">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>&quot;Serveur_1&quot;, &quot;Serv&quot;, &quot;124&quot;, &quot;CDV&quot; etc.. Possibilité de saisir plusieurs entrées séparées par un espace.</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="4">
+    <item row="2" column="0" colspan="4">
+     <widget class="QTableView" name="tableView"/>
+    </item>
+    <item row="1" column="3">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QPushButton" name="pushButton">
@@ -76,33 +85,7 @@
       </item>
      </layout>
     </item>
-    <item row="2" column="1" colspan="3">
-     <widget class="QLineEdit" name="lineEdit">
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="placeholderText">
-       <string>&quot;Serveur_1&quot;, &quot;Serv&quot;, &quot;124&quot;, &quot;CDV&quot; etc.. Possibilité de saisir plusieurs entrées séparées par un espace.</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0" colspan="5">
-     <widget class="QTableView" name="tableView"/>
-    </item>
-    <item row="3" column="0" colspan="5">
-     <widget class="QProgressBar" name="progressBar">
-      <property name="value">
-       <number>0</number>
-      </property>
-      <property name="textVisible">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
+    <item row="1" column="0">
      <widget class="QComboBox" name="comboBox">
       <property name="maximumSize">
        <size>
@@ -112,39 +95,12 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QCheckBox" name="checkBox_datacenter">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Datacenter VMware</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="checkBox_cluster">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Cluster VMware</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="checkBox_annotation">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Annotation VMware</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <item row="3" column="0" colspan="4">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -154,7 +110,7 @@
      <x>0</x>
      <y>0</y>
      <width>1022</width>
-     <height>18</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuParameters">

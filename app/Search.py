@@ -32,8 +32,6 @@ class Search(QtCore.QObject):
         print("is executed main thread?",  QtCore.QThread.currentThread() is QtCore.QCoreApplication.instance().thread())  # Pour vérifier si on est dans le main thread
 
         results_query_search = []
-        nbr_result_ko = 0
-        nbr_result_ok = 0
         logging.debug(f"self.categorie_to_search_in: {self.categorie_to_search_in}")
 
         with DatabaseGestionSqlite.DatabaseGestionSqlite() as db_connection:  # with allows you to use a context manager that will automatically call the disconnect function when you exit the scope
@@ -49,6 +47,7 @@ class Search(QtCore.QObject):
                         logging.debug(f"Rien n'a été entré dans la barre de recherche")
                         self.signal_display_warning_box.emit("Recherche vide", "Veuillez entrer une recherche.\nPar exemple :\n\n- Server1\n- Serv\n- server1.domain\n- appli_toto\n- server1 server2 server3")
                         self.runs = False
+                        return False
 
                     else:  # Si on a bien donné des éléments à rechercher
                         search_list_len = len(self.search_list)
@@ -119,7 +118,6 @@ class Search(QtCore.QObject):
                                 
                                 if not rows_result_sql:
                                     logging.debug(f"La recherche SQL a retourné un résultat vide")
-                                    nbr_result_ko += 1
 
                                     # En cas de résultat KO, on a pas le même nombre de colonnes en fonction de la catégorie recherchée
                                     if self.categorie_to_search_in == 'Equipement':
@@ -133,7 +131,6 @@ class Search(QtCore.QObject):
                                     logging.debug(f"La recherche SQL a retourné un résultat")
                                     nbr_item_in_list = len(rows_result_sql)
                                     results_query_search.extend(rows_result_sql)
-                                    nbr_result_ok = nbr_result_ok + nbr_item_in_list
 
                                 logging.debug(f"On emet le signal searched_string_signal en passant la search_string en cours -> {search_string}")
                                 self.searched_string_signal.emit(search_string)  # On émet le signal quand on a recherché un nom de la liste donnée par l'utilisateur et on fourni ce nom à l'interface graphique

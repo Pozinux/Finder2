@@ -51,9 +51,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.showMaximized()  # Pour ouvrir au démarrage en taille max la fenetre principale
 
         self.setup_connections()  # Establish connections between widgets and functions
-        self.setup_checkbox()  # Setup the checkbox status
         self.setup_keyboard_shortcuts()  # Establish connections between keys and functions
-        self.reset_progressbar_statusbar()  # When the window is launched, set the progress bar + status bar text to
         # self.textEdit.hide()  # When the window is launched, hide the textedit
         self.setWindowIcon(QtGui.QIcon("icons/window.png"))  # Set the window icon (does not work directly in QT Designer)
         self.menu_bar()  # Create the menu bar
@@ -218,11 +216,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             raise Exception(f'Error from finder file : Section {section_ini_authorized_files} not found in the {constantes.CONFIG_AUTHORIZED_FILES_INI} file.')
         return list(dict_authorized_files.values())
 
-    def reset_progressbar_statusbar(self):
-        self.progressBar.reset()
-        # self.progressBar.hide()
-        self.statusBar.showMessage("")
-
     def see_about(self):
         try:
             with open(os.path.join('data/about.txt'), 'r') as file_about:
@@ -290,23 +283,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButton.setIcon(search_icon)
         self.pushButton_2.setIcon(list_icon)
         # ComboBox = drop-down menu
-        self.comboBox.addItems(["Equipement", "Host (ESXi ou CN)", "Application"])
-
-    def setup_checkbox(self):
-        if constantes.CHECKBOX_DATACENTER == False:
-            self.checkBox_datacenter.setCheckState(QtCore.Qt.Unchecked)  
-        else:
-            self.checkBox_datacenter.setCheckState(QtCore.Qt.Checked)
-
-        if constantes.CHECKBOX_CLUSTER == False:
-            self.checkBox_cluster.setCheckState(QtCore.Qt.Unchecked)  
-        else:
-            self.checkBox_cluster.setCheckState(QtCore.Qt.Checked) 
-
-        if constantes.CHECKBOX_ANNOTATION== False:
-            self.checkBox_annotation.setCheckState(QtCore.Qt.Unchecked)  
-        else:
-            self.checkBox_annotation.setCheckState(QtCore.Qt.Checked)       
+        self.comboBox.addItems(["Equipement", "Host (ESXi ou CN)", "Application"])  
         
     def create_database_and_tables(self):
         """ Creates database and tables """
@@ -415,7 +392,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         QtGui.QShortcut(QtGui.QKeySequence('Return'), self, self.search)
 
     def search(self):
-        #self.reset_progressbar_statusbar()
         search_string = self.lineEdit.text()
         logging.debug(f"search_string : {search_string}")
         search_list = search_string.split()
@@ -448,6 +424,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def display_warning_box(self, warning_title, warning_text):
         self.prg_dialog.hide()
         logging.debug("Signal recherche vide reçu.")
+        main_window.textEdit.setText(f"Recherche annulée car recherche vide.")
         msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, f"{warning_title}", f"{warning_text}")
         msg_box.exec()
         self.search_instance.finished.connect(self.thread.quit)
@@ -472,7 +449,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         
     def import_list(self):        
         self.window_import_list = ImportList(main_window)
-        self.reset_progressbar_statusbar()
         self.window_import_list.show()        
 
     def list_exports(self, export_type):
@@ -572,19 +548,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         main_window.tableView.setItemDelegate(delegate)  # for all columns
         # enable sorting
         main_window.tableView.setSortingEnabled(True)
-        #main_window.statusBar.showMessage(f"Résultats : {str(nbr)} | OK : {str(nbr_result_ok)} | KO : {str(nbr_result_ko)}")
-        main_window.progressBar.reset()
-        # main_window.progressBar.hide()
 
         main_window.textEdit.setText("Sélectionnez des cellules puis CTRL+C pour les copier.\n\nFaites CTRL+A pour sélectionner toutes les données puis CTRL+C puis CTRL+V pour coller dans un notepad.\nLes données seront automatiquement formatées en CSV (avec des ';').\n\nVous pouvez également trier les colonnes directement dans l'interface.")
-
-        # # Cacher des colonnes  # TPO
-        # if main_window.checkBox_datacenter.isChecked() == False:
-        #     main_window.tableView.hideColumn(2)
-        # if main_window.checkBox_cluster.isChecked() == False:
-        #     main_window.tableView.hideColumn(3)
-        # if main_window.checkBox_annotation.isChecked() == False:
-        #     main_window.tableView.hideColumn(5)
   
 # MAIN
 

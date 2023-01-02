@@ -399,6 +399,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             warning_text = "Veuillez entrer une recherche.\nPar exemple :\n\n- Server1\n- Serv\n- server1.domain\n- appli_toto\n- server1 server2 server3"
             self.display_warning_box(warning_title, warning_text)
         else:
+            main_window.tableView.setModel(None)  # On efface le tableau actuel
             logging.debug(f"search_string : {search_string}")
             search_list = search_string.split()
             logging.debug(f"search_list : {search_list}")
@@ -426,7 +427,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.prg_dialog.close()
         self.prg_dialog.setMinimumDuration(0)
         self.prg_dialog.canceled.connect(self.abort)
-        self.prg_dialog.show()
+        #self.prg_dialog.show()
 
     def display_warning_box(self, warning_title, warning_text):
         logging.debug(f"warning_title : {warning_title}")

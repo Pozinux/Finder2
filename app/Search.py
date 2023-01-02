@@ -34,10 +34,15 @@ class Search(QtCore.QObject):
         logging.debug(f"self.categorie_to_search_in: {self.categorie_to_search_in}")
 
         with DatabaseGestionSqlite.DatabaseGestionSqlite() as db_connection:  # with allows you to use a context manager that will automatically call the disconnect function when you exit the scope
-            if db_connection.error_db_connection is None:
-
-                logging.debug(f"self.is_db_empty(): {self.is_db_empty()}")
-                if not self.is_db_empty():
+            if db_connection.error_db_connection is not None:
+                self.signal_textEdit_setText.emit("Erreur de connexion à la base de données.")
+                logging.debug(db_connection.error_db_connection)
+                self.signal_hide_progress_dialog.emit()
+            else:
+                if self.is_db_empty():
+                    logging.debug(f"Une des tables VMware ou OPCA est vide.")
+                    self.signal_hide_progress_dialog.emit()
+                else:
                     logging.debug(f"La base de données n'est pas vide")
                     logging.debug(f"self.search_list: {self.search_list}")
 
@@ -125,17 +130,10 @@ class Search(QtCore.QObject):
 
                             logging.debug(f"On emet le signal searched_string_signal en passant la search_string en cours -> {search_string}")
                             self.searched_string_signal.emit(search_string)  # On émet le signal quand on a recherché un nom de la liste donnée par l'utilisateur et on fourni ce nom à l'interface graphique
-                            logging.debug("On envoie le signal de fin de thread de recherche")
-                            self.signal_results_query_search.emit(results_query_search, self.categorie_to_search_in)  # On envoie le résultat de la requête sql pour qu'il soit affiché dans le tableau tableview
-                            self.finished.emit() # Indique que le Thread a terminé son travail
-                else:
-                    logging.debug(f"Une des tables VMware ou OPCA est vide.")
-                    self.signal_hide_progress_dialog.emit()
-            else:
-                self.signal_textEdit_setText.emit("Erreur de connexion à la base de données.")
-                logging.debug(db_connection.error_db_connection)
-                self.signal_hide_progress_dialog.emit()
-
+                    
+                    logging.debug("On envoie le signal de fin de thread de recherche")
+                    self.signal_results_query_search.emit(results_query_search, self.categorie_to_search_in)  # On envoie le résultat de la requête sql pour qu'il soit affiché dans le tableau tableview
+                    self.finished.emit() # Indique que le Thread a terminé son travail
 
     def is_db_empty(self):
         with DatabaseGestionSqlite.DatabaseGestionSqlite() as db_connection:  # with allows you to use a context manager that will automatically call the disconnect function when you exit the scope
@@ -148,8 +146,8 @@ class Search(QtCore.QObject):
                 if db_connection.error_db_execution is None:
                     rows_vmware = db_connection.cursor.fetchall()
                     if not rows_vmware:
-                        logging.debug("Base VMware vide ! Importer un export par Fichier > Importer un export...")
-                        self.signal_textEdit_setText.emit("Base VMware vide !\n\nImporter un export en cliquant sur 'Fichier' puis 'Importer un export...'")
+                        logging.debug("Base VMware vide ! Importez un export par Fichier > Importer un export...")
+                        self.signal_textEdit_setText.emit("Base VMware vide !\n\nImportez un export en cliquant sur 'Fichier' puis 'Importer un export...'")
                         return True
                     else:
                         logging.debug("Base VMware non-vide.") 
@@ -161,8 +159,8 @@ class Search(QtCore.QObject):
                 if db_connection.error_db_execution is None:
                     rows_opca = db_connection.cursor.fetchall()
                     if not rows_opca:
-                        logging.debug("Base OPCA vide ! Importer un export par Fichier > Importer un export...")
-                        self.signal_textEdit_setText.emit("Base OPCA vide !\n\nImporter un export en cliquant sur 'Fichier' puis 'Importer un export...'")
+                        logging.debug("Base OPCA vide ! Importez un export par Fichier > Importer un export...")
+                        self.signal_textEdit_setText.emit("Base OPCA vide !\n\nImportez un export en cliquant sur 'Fichier' puis 'Importer un export...'")
                         return True
                     else:
                         logging.debug("Base OPCA non-vide.") 

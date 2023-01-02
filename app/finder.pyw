@@ -367,6 +367,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         # Création de la barre de progression en fenêtre        
 
         self.prg_dialog_update_db = QtWidgets.QProgressDialog("Mise à jour de la base de données en cours...", "Annuler...", 1, len(files_paths_authorized_list) + 1)
+        self.prg_dialog_update_db.setWindowTitle("Finder")
         self.prg_dialog_update_db.close()
         self.prg_dialog_update_db.setMinimumDuration(0)
         self.prg_dialog_update_db.setCancelButton(None)
@@ -393,13 +394,18 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def search(self):
         search_string = self.lineEdit.text()
-        logging.debug(f"search_string : {search_string}")
-        search_list = search_string.split()
-        logging.debug(f"search_list : {search_list}")
-        search_choice = self.comboBox.currentText()
-        logging.debug(f"search_choice : {search_choice}")
-        logging.debug("Création du thread de recherche")  
-        self.search_thread(search_list, search_choice)
+        if search_string == '':
+            warning_title = "Recherche vide"
+            warning_text = "Veuillez entrer une recherche.\nPar exemple :\n\n- Server1\n- Serv\n- server1.domain\n- appli_toto\n- server1 server2 server3"
+            self.display_warning_box(warning_title, warning_text)
+        else:
+            logging.debug(f"search_string : {search_string}")
+            search_list = search_string.split()
+            logging.debug(f"search_list : {search_list}")
+            search_choice = self.comboBox.currentText()
+            logging.debug(f"search_choice : {search_choice}")
+            logging.debug("Création du thread de recherche")  
+            self.search_thread(search_list, search_choice)
 
     def search_thread(self, search_list, search_choice):
         self.thread = QtCore.QThread(self)
@@ -407,27 +413,26 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.search_instance.moveToThread(self.thread)
         self.search_instance.searched_string_signal.connect(self.searched_string_if_signal) 
         self.search_instance.signal_results_query_search.connect(self.display_in_tableview)
-        self.search_instance.signal_display_warning_box.connect(self.display_warning_box)
         self.search_instance.signal_textEdit_setText.connect(self.set_text_in_edit_text_if_signal)
         #self.search_instance.finished.connect(self.thread.quit)
         self.search_instance.finished.connect(self.finished_if_signal)
+        self.search_instance.signal_hide_progress_dialog.connect(self.hide_progress_dialog_if_signal)
         self.thread.started.connect(self.search_instance.search)
         self.thread.start()
-        # Création de la barre de progression en fenêtre        
 
+        # Création de la barre de progression en fenêtre        
         self.prg_dialog = QtWidgets.QProgressDialog("Recherche en cours...", "Annuler...", 1, len(search_list) + 1)
+        self.prg_dialog.setWindowTitle("Finder")
         self.prg_dialog.close()
         self.prg_dialog.setMinimumDuration(0)
         self.prg_dialog.canceled.connect(self.abort)
         self.prg_dialog.show()
 
     def display_warning_box(self, warning_title, warning_text):
-        self.prg_dialog.hide()
-        logging.debug("Signal recherche vide reçu.")
-        main_window.textEdit.setText(f"Recherche annulée car recherche vide.")
+        logging.debug(f"warning_title : {warning_title}")
+        logging.debug(f"warning_warning_texttitle : {warning_text}")
         msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, f"{warning_title}", f"{warning_text}")
         msg_box.exec()
-        self.search_instance.finished.connect(self.thread.quit)
 
     def abort(self):
         logging.debug(f"On a appuyé sur Annuler.")
@@ -443,7 +448,12 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         logging.debug(f"Traitement terminé. On quitte le thread")
         self.thread.quit()
         self.prg_dialog.setValue(self.prg_dialog.value() + 1)  # Mise à jour de la barre de progression à 100%
-        
+
+    def hide_progress_dialog_if_signal(self):
+        logging.debug(f"On cache la barre de progression et on quitte le thread")
+        self.thread.quit()
+        self.prg_dialog.hide()
+
     def set_text_in_edit_text_if_signal(self, text_to_set_in_edit_text):
         main_window.textEdit.setText(f"{text_to_set_in_edit_text}")
         

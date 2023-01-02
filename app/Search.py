@@ -147,7 +147,7 @@ class Search(QtCore.QObject):
                     rows_vmware = db_connection.cursor.fetchall()
                     if not rows_vmware:
                         logging.debug("Base VMware vide ! Importez un export par Fichier > Importer un export...")
-                        self.signal_textEdit_setText.emit("Base VMware vide !\n\nImportez un export en cliquant sur 'Fichier' puis 'Importer un export...'")
+                        self.signal_textEdit_setText.emit("Base VMware vide !\n\nDéposez un export avec des informations dans le répertoire 'export' > 'exports_opca'")
                         return True
                     else:
                         logging.debug("Base VMware non-vide.") 
@@ -160,7 +160,7 @@ class Search(QtCore.QObject):
                     rows_opca = db_connection.cursor.fetchall()
                     if not rows_opca:
                         logging.debug("Base OPCA vide ! Importez un export par Fichier > Importer un export...")
-                        self.signal_textEdit_setText.emit("Base OPCA vide !\n\nImportez un export en cliquant sur 'Fichier' puis 'Importer un export...'")
+                        self.signal_textEdit_setText.emit("Base OPCA vide !\n\nDéposez un export avec des informations dans le répertoire 'export' > 'exports_vmware'")
                         return True
                     else:
                         logging.debug("Base OPCA non-vide.") 
